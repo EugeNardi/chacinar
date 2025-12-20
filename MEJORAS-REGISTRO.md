@@ -1,96 +1,72 @@
-# ✅ MEJORAS EN EL REGISTRO
+# MEJORAS EN EL SISTEMA DE REGISTRO
 
-## 🎯 Cambios Implementados
+## MEJORAS IMPLEMENTADAS
 
-### 1. ✅ Mensajes de Error en Español
+### 1. Confirmacion de Contrasena
+- Campo adicional "Confirmar contrasena"
+- Validacion en tiempo real
+- Indicador visual cuando no coinciden
+- Mensaje de error claro
 
-Ahora todos los errores se muestran en español dentro de la página:
+### 2. Mensajes de Email de Confirmacion
+- Mensaje destacado sobre email de confirmacion
+- Instrucciones claras paso a paso
+- Recordatorio de revisar spam
+- Emoji para llamar la atencion
 
-**Antes:**
-```
-duplicate key value violates unique constraint "users_email_key"
-```
-
-**Ahora:**
-```
-Este email ya está registrado. Por favor, usa otro email o inicia sesión.
-```
-
-### 2. ✅ Errores Traducidos
-
-- ✅ **Email duplicado:** "Este email ya está registrado. Por favor, usa otro email o inicia sesión."
-- ✅ **Contraseña corta:** "La contraseña debe tener al menos 6 caracteres"
-- ✅ **Email inválido:** "El formato del email no es válido"
-- ✅ **Usuario ya registrado:** "Este email ya está registrado. Por favor, inicia sesión."
-- ✅ **Errores genéricos:** Se muestran con prefijo en español
-
-### 3. ✅ Rol Guardado Correctamente
-
-El sistema **SÍ** guarda el rol (admin o cliente) correctamente:
-
-```typescript
-// Línea 106 en auth/page.tsx
-role: userType,  // 'admin' o 'cliente'
-```
-
-**Flujo de registro:**
-1. Usuario selecciona "Cliente" o "Administrador"
-2. Completa el formulario
-3. Se crea el usuario en Supabase Auth
-4. Se guarda en la tabla `users` con el rol correcto
-5. Si es cliente, se crea su cuenta corriente
+### 3. Validaciones Mejoradas
+- Validacion de contrasenas coincidentes
+- Validacion de longitud minima (6 caracteres)
+- Mensajes de error en espanol
+- Feedback visual inmediato
 
 ---
 
-## 🔍 Verificar Rol en Base de Datos
+## COMO FUNCIONA
 
-### Opción 1: SQL en Supabase
+### Registro de Usuario
 
-```sql
--- Ver todos los usuarios con sus roles
-SELECT id, email, full_name, role, created_at 
-FROM users 
-ORDER BY created_at DESC;
-```
+1. Seleccionar tipo de cuenta (Cliente o Admin)
+2. Completar formulario:
+   - Nombre completo
+   - Email
+   - Contrasena (minimo 6 caracteres)
+   - NUEVO: Confirmar contrasena
+   - Codigo de vinculacion (opcional, solo clientes)
 
-### Opción 2: Tabla en Supabase
+3. Validaciones automaticas:
+   - Las contrasenas deben coincidir
+   - Minimo 6 caracteres
+   - Email valido
+   - Todos los campos requeridos
 
-1. Ve a Supabase Dashboard
-2. Table Editor → `users`
-3. Verás la columna `role` con valores 'admin' o 'cliente'
-
----
-
-## 📋 Mensajes de Error Completos
-
-### Registro
-
-| Error Original | Mensaje en Español |
-|---------------|-------------------|
-| `User already registered` | Este email ya está registrado. Por favor, inicia sesión. |
-| `duplicate key value violates unique constraint` | Este email ya está registrado. Por favor, usa otro email o inicia sesión. |
-| `Password should be at least 6 characters` | La contraseña debe tener al menos 6 caracteres |
-| `Invalid email` | El formato del email no es válido |
-| Otros errores | Error al crear la cuenta: [mensaje] |
-
-### Login
-
-| Error Original | Mensaje en Español |
-|---------------|-------------------|
-| `Invalid login credentials` | Email o contraseña incorrectos |
-| `Email not confirmed` | Por favor, confirma tu email antes de iniciar sesión |
+4. Despues del registro:
+   - Mensaje de exito con instrucciones
+   - Email de confirmacion enviado
+   - Redireccion automatica al login
 
 ---
 
-## 🎨 Diseño de Mensajes
+## EMAIL DE CONFIRMACION
 
-Los mensajes se muestran en cajas de colores:
+### Que hace Supabase?
 
-### Error (Rojo)
-```
-┌─────────────────────────────────────────┐
-│ ⚠️ Este email ya está registrado.      │
-│    Por favor, usa otro email o         │
+Supabase envia automaticamente un email de confirmacion cuando un usuario se registra.
+
+### Contenido del email:
+
+- Asunto: "Confirm Your Signup" o "Confirma tu registro"
+- Contenido: 
+  - Link de confirmacion
+  - Valido por 24 horas
+  - Click para activar la cuenta
+
+### Configuracion en Supabase:
+
+1. Authentication -> Email Templates
+2. Personalizar plantillas (opcional)
+3. Configurar dominio de email (opcional)
+
 │    inicia sesión.                       │
 └─────────────────────────────────────────┘
 ```

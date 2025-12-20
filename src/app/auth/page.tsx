@@ -23,6 +23,7 @@ export default function AuthPage() {
   // Form state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [linkCode, setLinkCode] = useState('');
 
@@ -70,8 +71,18 @@ export default function AuthPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccess('');
 
     try {
+      // Validar que las contraseñas coincidan
+      if (password !== confirmPassword) {
+        throw new Error('Las contraseñas no coinciden');
+      }
+
+      // Validar longitud de contraseña
+      if (password.length < 6) {
+        throw new Error('La contraseña debe tener al menos 6 caracteres');
+      }
       // Crear usuario en Supabase Auth
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
@@ -150,7 +161,7 @@ export default function AuthPage() {
                 .eq('id', oldUserId);
             }
 
-            setSuccess(`¡Cuenta vinculada exitosamente! Tu saldo de $${existingAccount.balance.toFixed(2)} ha sido sincronizado. Hemos enviado un email de confirmación a ${email}.`);
+            setSuccess(`¡Cuenta vinculada exitosamente! Tu saldo de $${existingAccount.balance.toFixed(2)} ha sido sincronizado. \n\n📧 IMPORTANTE: Hemos enviado un email de confirmación a ${email}. Por favor, revisa tu bandeja de entrada (y carpeta de spam) y confirma tu cuenta antes de iniciar sesión.`);
           } else {
             // Crear nueva cuenta corriente
             const { error: accountError } = await supabase
@@ -164,15 +175,17 @@ export default function AuthPage() {
               throw new Error('Error al crear la cuenta corriente: ' + accountError.message);
             }
 
-            setSuccess(`¡Registro exitoso! Hemos enviado un email de confirmación a ${email}. Por favor, revisa tu bandeja de entrada y confirma tu cuenta antes de iniciar sesión.`);
+            setSuccess(`¡Registro exitoso! \n\n📧 IMPORTANTE: Hemos enviado un email de confirmación a ${email}. \n\nPor favor, revisa tu bandeja de entrada (y carpeta de spam) y haz click en el enlace de confirmación antes de iniciar sesión. \n\nSi no recibes el email en 5 minutos, revisa tu carpeta de spam.`);
           }
         } else {
-          setSuccess(`¡Registro exitoso! Hemos enviado un email de confirmación a ${email}. Por favor, revisa tu bandeja de entrada y confirma tu cuenta antes de iniciar sesión.`);
+          // Para admin, solo mostrar mensaje de éxito
+          setSuccess(`¡Registro exitoso! \n\n📧 IMPORTANTE: Hemos enviado un email de confirmación a ${email}. \n\nPor favor, revisa tu bandeja de entrada (y carpeta de spam) y haz click en el enlace de confirmación antes de iniciar sesión. \n\nSi no recibes el email en 5 minutos, revisa tu carpeta de spam.`);
         }
         
         // Limpiar formulario
         setEmail('');
         setPassword('');
+        setConfirmPassword('');
         setFullName('');
         setLinkCode('');
         
@@ -479,8 +492,17 @@ export default function AuthPage() {
 
         {success && (
           <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-apple mb-4">
-            <p className="font-medium mb-2">✅ {success}</p>
-            <p className="text-sm">Serás redirigido al login en unos segundos...</p>
+            <div className="whitespace-pre-line">
+              <p className="font-medium">✅ {success.split('\n\n')[0]}</p>
+              {success.includes('📧') && (
+                <div className="mt-3 text-sm space-y-1">
+                  {success.split('\n\n').slice(1).map((line, i) => (
+                    <p key={i}>{line}</p>
+                  ))}
+                </div>
+              )}
+            </div>
+            <p className="text-sm mt-3 font-medium">Serás redirigido al login en unos segundos...</p>
           </div>
         )}
 
@@ -523,6 +545,24 @@ export default function AuthPage() {
             minLength={6}
             autoComplete="new-password"
           />
+
+          <Input
+            type="password"
+            label="Confirmar contraseña"
+            placeholder="••••••••"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+            minLength={6}
+            autoComplete="new-password"
+            className={confirmPassword && password !== confirmPassword ? 'border-red-500' : ''}
+          />
+
+          {confirmPassword && password !== confirmPassword && (
+            <p className="text-sm text-red-600 -mt-2">
+              ⚠️ Las contraseñas no coinciden
+            </p>
+          )}
 
           {userType === 'cliente' && (
             <Input
