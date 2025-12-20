@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --brand-primary: #8B1818;
+    --brand-dark: #5c1515;
+    --brand-light: #b91c1c;
+  }
+  body {
+    @apply bg-neutral-50 text-neutral-900 antialiased;
+  }
+  button {
+    @apply transition-all duration-200;
+  }
+  /* Estilos personalizados para inputs */
+  input:focus,
+  textarea:focus {
+    @apply ring-2 ring-brand;
+  }
+  /* Animaciones suaves */
+  * {
+    @apply transition-colors duration-200;
+  }
+}
+
+@layer components {
+  .logo-gradient {
+    background: linear-gradient(135deg, #8B1818 0%, #5c1515 100%);
+  }
+  .card-hover {
+    @apply transition-all duration-200 hover:shadow-medium hover:-translate-y-0.5;
+  }
+}
