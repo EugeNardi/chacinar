@@ -182,7 +182,7 @@ export default function ClienteDashboard() {
               {formatCurrency(account?.balance || 0)}
             </p>
             <p className="text-sm text-neutral-600 mb-4">
-              {account?.balance > 0 ? 'Debes pagar este monto' : 'Estás al día'}
+              {(account?.balance || 0) > 0 ? 'Debes pagar este monto' : 'Estás al día'}
             </p>
             <Button
               variant="primary"
@@ -196,10 +196,10 @@ export default function ClienteDashboard() {
         </Card>
 
         {/* QR de Mercado Pago */}
-        {account?.balance > 0 && (
+        {account && (account.balance || 0) > 0 && (
           <MercadoPagoQR
             wallet={account.mercadopago_wallet || ''}
-            amount={account.balance}
+            amount={account.balance || 0}
             clientName={userProfile?.full_name || ''}
           />
         )}

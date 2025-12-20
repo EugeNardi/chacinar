@@ -123,11 +123,15 @@ export default function AdminDashboard() {
         });
 
       // Actualizar balance
-      const { data: account } = await supabase
+      const { data: account, error: accountError } = await supabase
         .from('accounts')
         .select('balance')
         .eq('id', accountId)
         .single();
+
+      if (accountError || !account) {
+        throw new Error('No se pudo obtener la cuenta');
+      }
 
       const newBalance = type === 'cargo' 
         ? account.balance + amount 
@@ -165,6 +169,11 @@ export default function AdminDashboard() {
 
   async function handleGeneratePDF(client: User & { account: Account }) {
     try {
+      if (!client.account) {
+        showToast('Error: Cliente sin cuenta asociada', 'error');
+        return;
+      }
+
       // Cargar transacciones del cliente
       const { data: transactionsData } = await supabase
         .from('transactions')
@@ -197,7 +206,7 @@ export default function AdminDashboard() {
         clientName: client.full_name,
         clientEmail: client.email,
         bills: bills,
-        totalAmount: client.account.balance || 0,
+        totalAmount: client.account?.balance || 0,
         mercadoPagoWallet: paymentMethods?.mp_alias || '',
         bankName: paymentMethods?.bank_name || '',
         bankAccount: paymentMethods?.bank_account_number || '',
@@ -213,6 +222,11 @@ export default function AdminDashboard() {
 
   async function handleShowHistory(client: User & { account: Account }) {
     try {
+      if (!client.account) {
+        showToast('Error: Cliente sin cuenta asociada', 'error');
+        return;
+      }
+
       // Cargar todas las transacciones del cliente
       const { data: transactionsData } = await supabase
         .from('transactions')
@@ -539,6 +553,11 @@ export default function AdminDashboard() {
           try {
             const { data: { session } } = await supabase.auth.getSession();
             
+            if (!selectedClient.account) {
+              showToast('Error: Cliente sin cuenta asociada', 'error');
+              return;
+            }
+            
             // Actualizar saldo
             const newBalance = (selectedClient.account.balance || 0) + amount;
             await supabase
@@ -699,11 +718,16 @@ export default function AdminDashboard() {
             return;
           }
 
+          if (!selectedClient.account) {
+            showToast('Error: Cliente sin cuenta asociada', 'error');
+            return;
+          }
+
           try {
             const { data: { session } } = await supabase.auth.getSession();
             
             // Actualizar saldo
-            const newBalance = (selectedClient.account?.balance || 0) + amount;
+            const newBalance = (selectedClient.account.balance || 0) + amount;
             await supabase
               .from('accounts')
               .update({ balance: newBalance })
