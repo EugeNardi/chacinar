@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -9,14 +9,14 @@ import { supabase } from '@/lib/supabase';
 import { User, Building2, Shield } from 'lucide-react';
 import Logo from '@/components/Logo';
 
-type AuthMode = 'welcome' | 'login-admin' | 'login-cliente' | 'register';
+type AuthMode = 'welcome' | 'login-admin' | 'login-cliente' | 'register' | 'forgot-password';
 type UserType = 'cliente' | 'admin' | null;
 
 export default function AuthPage() {
   const router = useRouter();
   const [mode, setMode] = useState<AuthMode>('welcome');
   const [userType, setUserType] = useState<UserType>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -26,6 +26,38 @@ export default function AuthPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [linkCode, setLinkCode] = useState('');
+
+  useEffect(() => {
+    checkExistingSession();
+  }, []);
+
+  async function checkExistingSession() {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+
+        if (!userError && userData) {
+          if (userData.role === 'admin') {
+            router.push('/admin');
+            return;
+          } else if (userData.role === 'cliente') {
+            router.push('/cliente');
+            return;
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error checking session:', err);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -48,20 +80,60 @@ export default function AuthPage() {
       }
 
       if (data.user) {
-        const { data: userData } = await supabase
+        const { data: userData, error: userError } = await supabase
           .from('users')
-          .select('role')
+          .select('role, full_name')
           .eq('id', data.user.id)
           .single();
 
-        if (userData?.role === 'admin') {
+        if (userError) {
+          console.error('Error obteniendo datos del usuario:', userError);
+          throw new Error('No se pudo obtener la información del usuario. Por favor, contacta al administrador.');
+        }
+
+        if (!userData) {
+          throw new Error('Usuario no encontrado en la base de datos. Por favor, contacta al administrador.');
+        }
+
+        console.log('Usuario autenticado:', userData.full_name, 'Rol:', userData.role);
+
+        if (userData.role === 'admin') {
           router.push('/admin');
-        } else {
+        } else if (userData.role === 'cliente') {
           router.push('/cliente');
+        } else {
+          throw new Error(`Rol de usuario inválido: ${userData.role}`);
         }
       }
     } catch (err: any) {
       setError(err.message || 'Error al iniciar sesión');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleForgotPassword(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth`,
+      });
+
+      if (error) throw error;
+
+      setSuccess('Se ha enviado un email con instrucciones para restablecer tu contraseña. Por favor, revisa tu bandeja de entrada y carpeta de spam.');
+      setEmail('');
+      
+      setTimeout(() => {
+        setMode('welcome');
+        setSuccess('');
+      }, 5000);
+    } catch (err: any) {
+      setError(err.message || 'Error al enviar el email de recuperación');
     } finally {
       setLoading(false);
     }
@@ -109,6 +181,8 @@ export default function AuthPage() {
       }
 
       if (data.user) {
+        console.log('Registrando usuario con rol:', userType);
+        
         // Crear registro en tabla users
         const { error: userError } = await supabase
           .from('users')
@@ -120,12 +194,15 @@ export default function AuthPage() {
           });
 
         if (userError) {
+          console.error('Error al crear usuario en BD:', userError);
           // Traducir error de email duplicado
           if (userError.message.includes('duplicate key value violates unique constraint')) {
             throw new Error('Este email ya está registrado. Por favor, usa otro email o inicia sesión.');
           }
           throw new Error('Error al guardar los datos: ' + userError.message);
         }
+
+        console.log('Usuario creado exitosamente con rol:', userType);
 
         // Si es cliente, crear cuenta corriente o vincular con código
         if (userType === 'cliente') {
@@ -200,6 +277,14 @@ export default function AuthPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      </div>
+    );
   }
 
   // Pantalla de bienvenida - Selección de tipo de login
@@ -328,6 +413,14 @@ export default function AuthPage() {
               {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
             </Button>
 
+            <button
+              type="button"
+              onClick={() => setMode('forgot-password')}
+              className="w-full text-sm text-brand hover:text-brand-dark underline"
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
+
             <Button
               type="button"
               variant="ghost"
@@ -393,6 +486,77 @@ export default function AuthPage() {
               className="w-full bg-blue-500 hover:bg-blue-600"
             >
               {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+            </Button>
+
+            <button
+              type="button"
+              onClick={() => setMode('forgot-password')}
+              className="w-full text-sm text-blue-600 hover:text-blue-700 underline"
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
+
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setMode('welcome')}
+              className="w-full"
+            >
+              Volver
+            </Button>
+          </form>
+        </Card>
+      </div>
+    );
+  }
+
+  // Pantalla de recuperación de contraseña
+  if (mode === 'forgot-password') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100 flex items-center justify-center p-4">
+        <Card className="max-w-md w-full p-8">
+          <div className="flex justify-center mb-6">
+            <div className="bg-white rounded-2xl p-2 shadow-xl">
+              <Logo size="md" />
+            </div>
+          </div>
+          <h2 className="text-2xl font-bold text-neutral-900 text-center mb-2">
+            Recuperar Contraseña
+          </h2>
+          <p className="text-center text-neutral-600 mb-6">
+            Ingresa tu email y te enviaremos instrucciones para restablecer tu contraseña
+          </p>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-apple mb-4">
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-apple mb-4 whitespace-pre-line">
+              {success}
+            </div>
+          )}
+
+          <form onSubmit={handleForgotPassword} className="space-y-4">
+            <Input
+              type="email"
+              label="Correo electrónico"
+              placeholder="tu@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+            />
+
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={loading}
+              className="w-full bg-brand hover:bg-brand-dark"
+            >
+              {loading ? 'Enviando...' : 'Enviar Email de Recuperación'}
             </Button>
 
             <Button

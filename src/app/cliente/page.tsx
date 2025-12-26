@@ -8,7 +8,7 @@ import Input from '@/components/ui/Input';
 import Badge from '@/components/ui/Badge';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Account, Transaction, ModificationRequest } from '@/types';
-import { DollarSign, Plus, History, Clock, User as UserIcon, Calendar, Wallet } from 'lucide-react';
+import { DollarSign, Plus, History, Clock, User as UserIcon, Calendar, Wallet, MessageCircle, Send } from 'lucide-react';
 import MercadoPagoQR from '@/components/MercadoPagoQR';
 
 export default function ClienteDashboard() {
@@ -195,13 +195,86 @@ export default function ClienteDashboard() {
           </div>
         </Card>
 
-        {/* QR de Mercado Pago */}
+        {/* Opciones de Pago */}
         {account && (account.balance || 0) > 0 && (
-          <MercadoPagoQR
-            wallet={account.mercadopago_wallet || ''}
-            amount={account.balance || 0}
-            clientName={userProfile?.full_name || ''}
-          />
+          <Card>
+            <h3 className="text-xl font-bold text-neutral-900 mb-4">💳 Opciones de Pago</h3>
+            
+            {/* QR de Mercado Pago */}
+            {account.mercadopago_wallet && (
+              <div className="mb-6">
+                <MercadoPagoQR
+                  wallet={account.mercadopago_wallet}
+                  amount={account.balance || 0}
+                  clientName={userProfile?.full_name || ''}
+                />
+              </div>
+            )}
+
+            {/* Botones de WhatsApp */}
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-neutral-700 mb-3">
+                📱 Enviar comprobante de pago por WhatsApp:
+              </p>
+              
+              <a
+                href={`https://wa.me/5493467494443?text=${encodeURIComponent(
+                  `Hola Sebastián! Soy ${userProfile?.full_name || 'un cliente'}.\n\nTe envío el comprobante de pago de mi cuenta corriente.\nSaldo actual: ${formatCurrency(account.balance || 0)}\n\n¡Gracias!`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between w-full p-4 bg-green-50 hover:bg-green-100 border-2 border-green-200 rounded-apple transition-all"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                    <MessageCircle className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-semibold text-neutral-900">Sebastián</p>
+                    <p className="text-sm text-neutral-600">+54 9 3467 49 4443</p>
+                  </div>
+                </div>
+                <Send className="w-5 h-5 text-green-600" />
+              </a>
+
+              <a
+                href={`https://wa.me/5493467441282?text=${encodeURIComponent(
+                  `Hola Claudia! Soy ${userProfile?.full_name || 'un cliente'}.\n\nTe envío el comprobante de pago de mi cuenta corriente.\nSaldo actual: ${formatCurrency(account.balance || 0)}\n\n¡Gracias!`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between w-full p-4 bg-green-50 hover:bg-green-100 border-2 border-green-200 rounded-apple transition-all"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                    <MessageCircle className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-semibold text-neutral-900">Claudia</p>
+                    <p className="text-sm text-neutral-600">+54 9 3467 44 1282</p>
+                  </div>
+                </div>
+                <Send className="w-5 h-5 text-green-600" />
+              </a>
+
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-apple">
+                <p className="text-xs text-blue-800 mb-3">
+                  💡 <strong>Importante:</strong> Después de enviar el comprobante, notifica el pago para que el administrador lo apruebe.
+                </p>
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    setRequestType('pago');
+                    setShowRequestForm(true);
+                  }}
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                >
+                  <Clock className="w-4 h-4 mr-2" />
+                  Notificar Pago Realizado
+                </Button>
+              </div>
+            </div>
+          </Card>
         )}
       </div>
 
@@ -335,30 +408,48 @@ export default function ClienteDashboard() {
               transactions.map((transaction) => (
                 <div
                   key={transaction.id}
-                  className="flex items-center justify-between py-3 border-b border-neutral-100 last:border-0"
+                  className="py-3 border-b border-neutral-100 last:border-0"
                 >
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <Badge variant={transaction.type === 'cargo' ? 'danger' : 'success'}>
-                        {transaction.type === 'cargo' ? 'Cargo' : 'Pago'}
-                      </Badge>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <Badge variant={transaction.type === 'cargo' ? 'danger' : 'success'}>
+                          {transaction.type === 'cargo' ? 'Cargo' : 'Pago'}
+                        </Badge>
+                      </div>
+                      {transaction.description && (
+                        <p className="text-sm text-neutral-600 font-medium">{transaction.description}</p>
+                      )}
+                      <div className="flex items-center text-xs text-neutral-500 mt-2">
+                        <Calendar className="w-3 h-3 mr-1" />
+                        <span>{formatDate(transaction.created_at)}</span>
+                      </div>
                     </div>
-                    {transaction.description && (
-                      <p className="text-sm text-neutral-600 font-medium">{transaction.description}</p>
-                    )}
-                    <div className="flex items-center text-xs text-neutral-500 mt-2">
-                      <Calendar className="w-3 h-3 mr-1" />
-                      <span>{formatDate(transaction.created_at)}</span>
+                    <div className="text-right">
+                      <p className={`text-xl font-bold ${
+                        transaction.type === 'cargo' ? 'text-red-600' : 'text-green-600'
+                      }`}>
+                        {transaction.type === 'cargo' ? '+' : '-'}
+                        {formatCurrency(transaction.amount)}
+                      </p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className={`text-xl font-bold ${
-                      transaction.type === 'cargo' ? 'text-red-600' : 'text-green-600'
-                    }`}>
-                      {transaction.type === 'cargo' ? '+' : '-'}
-                      {formatCurrency(transaction.amount)}
-                    </p>
-                  </div>
+                  {(transaction.balance_before !== null || transaction.balance_after !== null) && (
+                    <div className="mt-2 pt-2 border-t border-neutral-100 flex justify-between text-xs">
+                      <div>
+                        <span className="text-neutral-500">Saldo anterior: </span>
+                        <span className="font-semibold text-neutral-700">
+                          {formatCurrency(transaction.balance_before || 0)}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-neutral-500">Saldo después: </span>
+                        <span className="font-semibold text-neutral-700">
+                          {formatCurrency(transaction.balance_after || 0)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))
             )}

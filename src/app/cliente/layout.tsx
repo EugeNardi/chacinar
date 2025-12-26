@@ -30,13 +30,30 @@ export default function ClienteLayout({
       return;
     }
 
-    const { data: user } = await supabase
+    const { data: user, error: userError } = await supabase
       .from('users')
       .select('role, full_name')
       .eq('id', session.user.id)
       .single();
 
-    if (user?.role === 'admin') {
+    if (userError) {
+      console.error('Error obteniendo usuario en cliente layout:', userError);
+      await supabase.auth.signOut();
+      router.push('/auth');
+      return;
+    }
+
+    if (!user) {
+      console.error('Usuario no encontrado en la base de datos');
+      await supabase.auth.signOut();
+      router.push('/auth');
+      return;
+    }
+
+    console.log('Cliente Layout - Usuario:', user.full_name, 'Rol:', user.role);
+
+    if (user.role === 'admin') {
+      console.log('Redirigiendo administrador al panel admin');
       router.push('/admin');
       return;
     }

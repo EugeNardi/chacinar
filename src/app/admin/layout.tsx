@@ -28,13 +28,30 @@ export default function AdminLayout({
       return;
     }
 
-    const { data: user } = await supabase
+    const { data: user, error: userError } = await supabase
       .from('users')
       .select('role, full_name')
       .eq('id', session.user.id)
       .single();
 
-    if (user?.role !== 'admin') {
+    if (userError) {
+      console.error('Error obteniendo usuario en admin layout:', userError);
+      await supabase.auth.signOut();
+      router.push('/auth');
+      return;
+    }
+
+    if (!user) {
+      console.error('Usuario no encontrado en la base de datos');
+      await supabase.auth.signOut();
+      router.push('/auth');
+      return;
+    }
+
+    console.log('Admin Layout - Usuario:', user.full_name, 'Rol:', user.role);
+
+    if (user.role !== 'admin') {
+      console.warn('Acceso denegado: El usuario no es administrador. Rol:', user.role);
       router.push('/cliente');
       return;
     }

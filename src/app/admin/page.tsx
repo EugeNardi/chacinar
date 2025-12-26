@@ -40,6 +40,8 @@ export default function AdminDashboard() {
   const [bankName, setBankName] = useState('');
   const [bankAccount, setBankAccount] = useState('');
   const [bankCbu, setBankCbu] = useState('');
+  const [showGlobalHistoryModal, setShowGlobalHistoryModal] = useState(false);
+  const [globalHistory, setGlobalHistory] = useState<any[]>([]);
   const { showToast, ToastContainer } = useToast();
 
   useEffect(() => {
@@ -60,6 +62,9 @@ export default function AdminDashboard() {
 
   async function loadData() {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('Admin cargando datos. Admin ID:', session?.user.id);
+      
       // Cargar clientes con sus cuentas
       const { data: usersData, error: usersError } = await supabase
         .from('users')
@@ -71,6 +76,9 @@ export default function AdminDashboard() {
       }
 
       if (usersData) {
+        console.log('Total de clientes cargados:', usersData.length);
+        console.log('Clientes:', usersData.map(u => ({ nombre: u.full_name, email: u.email })));
+        
         const formattedClients = usersData.map((user: any) => ({
           ...user,
           account: user.accounts[0]
@@ -100,29 +108,7 @@ export default function AdminDashboard() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
-      // Actualizar solicitud
-      await supabase
-        .from('modification_requests')
-        .update({
-          status: 'aprobado',
-          reviewed_by: session?.user.id,
-          reviewed_at: new Date().toISOString(),
-        })
-        .eq('id', requestId);
-
-      // Crear transacción
-      await supabase
-        .from('transactions')
-        .insert({
-          account_id: accountId,
-          type: type,
-          amount: amount,
-          status: 'aprobado',
-          created_by: session?.user.id,
-          approved_by: session?.user.id,
-        });
-
-      // Actualizar balance
+      // Obtener saldo actual antes de modificar
       const { data: account, error: accountError } = await supabase
         .from('accounts')
         .select('balance')
@@ -133,18 +119,52 @@ export default function AdminDashboard() {
         throw new Error('No se pudo obtener la cuenta');
       }
 
+      const balanceBefore = account.balance;
       const newBalance = type === 'cargo' 
         ? account.balance + amount 
         : account.balance - amount;
 
+      // Actualizar solicitud
+      await supabase
+        .from('modification_requests')
+        .update({
+          status: 'aprobado',
+          reviewed_by: session?.user.id,
+          reviewed_at: new Date().toISOString(),
+        })
+        .eq('id', requestId);
+
+      // Crear transacción con saldo antes y después
+      await supabase
+        .from('transactions')
+        .insert({
+          account_id: accountId,
+          type: type,
+          amount: amount,
+          status: 'aprobado',
+          created_by: session?.user.id,
+          approved_by: session?.user.id,
+          balance_before: balanceBefore,
+          balance_after: newBalance,
+        });
+
+      // Actualizar balance
       await supabase
         .from('accounts')
         .update({ balance: newBalance })
         .eq('id', accountId);
 
+      showToast(
+        type === 'pago' 
+          ? `Pago aprobado exitosamente. Saldo descontado: ${formatCurrency(amount)}` 
+          : `Cargo aprobado exitosamente. Saldo agregado: ${formatCurrency(amount)}`,
+        'success'
+      );
+      
       loadData();
     } catch (error) {
       console.error('Error approving request:', error);
+      showToast('Error al aprobar la solicitud', 'error');
     }
   }
 
@@ -161,9 +181,11 @@ export default function AdminDashboard() {
         })
         .eq('id', requestId);
 
+      showToast('Solicitud rechazada', 'success');
       loadData();
     } catch (error) {
       console.error('Error rejecting request:', error);
+      showToast('Error al rechazar la solicitud', 'error');
     }
   }
 
@@ -243,6 +265,32 @@ export default function AdminDashboard() {
     }
   }
 
+  async function handleShowGlobalHistory() {
+    try {
+      // Cargar todas las transacciones con información del cliente
+      const { data: transactionsData } = await supabase
+        .from('transactions')
+        .select(`
+          *,
+          accounts!inner(
+            user_id,
+            users!inner(
+              full_name,
+              email
+            )
+          )
+        `)
+        .eq('status', 'aprobado')
+        .order('created_at', { ascending: false });
+
+      setGlobalHistory(transactionsData || []);
+      setShowGlobalHistoryModal(true);
+    } catch (error) {
+      console.error('Error cargando historial global:', error);
+      showToast('Error al cargar el historial', 'error');
+    }
+  }
+
   async function handleAddClientWithoutAccount() {
     try {
       if (!newClientName.trim()) {
@@ -308,15 +356,26 @@ export default function AdminDashboard() {
       <div>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
           <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900">Panel de Administrador</h1>
-          <Button
-            variant="secondary"
-            onClick={() => setShowPaymentConfigModal(true)}
-            className="flex items-center justify-center gap-2 text-sm sm:text-base"
-          >
-            <Settings className="w-4 h-4" />
-            <span className="hidden sm:inline">Configurar Métodos de Pago</span>
-            <span className="sm:hidden">Métodos de Pago</span>
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="secondary"
+              onClick={handleShowGlobalHistory}
+              className="flex items-center justify-center gap-2 text-sm sm:text-base"
+            >
+              <History className="w-4 h-4" />
+              <span className="hidden sm:inline">Historial Global</span>
+              <span className="sm:hidden">Historial</span>
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => setShowPaymentConfigModal(true)}
+              className="flex items-center justify-center gap-2 text-sm sm:text-base"
+            >
+              <Settings className="w-4 h-4" />
+              <span className="hidden sm:inline">Configurar Métodos de Pago</span>
+              <span className="sm:hidden">Métodos de Pago</span>
+            </Button>
+          </div>
         </div>
         <p className="text-sm sm:text-base text-neutral-600 mb-4 sm:mb-6">Gestiona clientes y solicitudes de Chacinar</p>
         
@@ -558,14 +617,17 @@ export default function AdminDashboard() {
               return;
             }
             
+            // Obtener saldo actual antes de modificar
+            const balanceBefore = selectedClient.account.balance || 0;
+            const newBalance = balanceBefore + amount;
+            
             // Actualizar saldo
-            const newBalance = (selectedClient.account.balance || 0) + amount;
             await supabase
               .from('accounts')
               .update({ balance: newBalance })
               .eq('id', selectedClient.account.id);
 
-            // Crear transacción
+            // Crear transacción con saldo antes y después
             await supabase
               .from('transactions')
               .insert({
@@ -577,6 +639,8 @@ export default function AdminDashboard() {
                 created_by: session?.user.id,
                 approved_by: session?.user.id,
                 approved_at: new Date().toISOString(),
+                balance_before: balanceBefore,
+                balance_after: newBalance,
               });
 
             // Crear notificación para el cliente (solo si tiene user_id)
@@ -726,14 +790,17 @@ export default function AdminDashboard() {
           try {
             const { data: { session } } = await supabase.auth.getSession();
             
+            // Obtener saldo actual antes de modificar
+            const balanceBefore = selectedClient.account.balance || 0;
+            const newBalance = balanceBefore + amount;
+            
             // Actualizar saldo
-            const newBalance = (selectedClient.account.balance || 0) + amount;
             await supabase
               .from('accounts')
               .update({ balance: newBalance })
               .eq('id', selectedClient.account.id);
 
-            // Crear transacción
+            // Crear transacción con saldo antes y después
             await supabase
               .from('transactions')
               .insert({
@@ -745,7 +812,9 @@ export default function AdminDashboard() {
                 created_by: session?.user?.id,
                 approved_by: session?.user?.id,
                 approved_at: new Date().toISOString(),
-                created_at: billDate + 'T00:00:00Z'
+                created_at: billDate + 'T00:00:00Z',
+                balance_before: balanceBefore,
+                balance_after: newBalance,
               });
 
             // Crear notificación para el cliente (solo si tiene user_id)
@@ -945,6 +1014,24 @@ export default function AdminDashboard() {
                       <p className="text-sm text-neutral-600 mt-2">
                         {transaction.description}
                       </p>
+                    )}
+                    {(transaction.balance_before !== null || transaction.balance_after !== null) && (
+                      <div className="mt-3 pt-3 border-t border-neutral-200">
+                        <div className="flex justify-between text-sm">
+                          <div>
+                            <p className="text-neutral-500">Saldo anterior:</p>
+                            <p className="font-semibold text-neutral-700">
+                              {formatCurrency(transaction.balance_before || 0)}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-neutral-500">Saldo después:</p>
+                            <p className="font-semibold text-neutral-700">
+                              {formatCurrency(transaction.balance_after || 0)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     )}
                   </div>
                 ))}
@@ -1154,6 +1241,140 @@ export default function AdminDashboard() {
             </Button>
           </div>
         </form>
+      </Modal>
+
+      {/* Modal Historial Global */}
+      <Modal
+        isOpen={showGlobalHistoryModal}
+        onClose={() => setShowGlobalHistoryModal(false)}
+        title="Historial Global de Transacciones"
+      >
+        <div className="space-y-4">
+          {/* Resumen */}
+          <div className="bg-neutral-50 p-4 rounded-apple">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-neutral-600">Total Transacciones</p>
+                <p className="text-2xl font-bold text-neutral-900">{globalHistory.length}</p>
+              </div>
+              <div>
+                <p className="text-sm text-neutral-600">Total Cargos</p>
+                <p className="text-2xl font-bold text-red-600">
+                  {formatCurrency(
+                    globalHistory
+                      .filter(t => t.type === 'cargo')
+                      .reduce((sum, t) => sum + t.amount, 0)
+                  )}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-neutral-600">Total Pagos</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {formatCurrency(
+                    globalHistory
+                      .filter(t => t.type === 'pago')
+                      .reduce((sum, t) => sum + t.amount, 0)
+                  )}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-neutral-600">Deuda Total Actual</p>
+                <p className="text-2xl font-bold text-neutral-900">
+                  {formatCurrency(totalDebt)}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Historial de Transacciones */}
+          <div>
+            <h3 className="font-semibold text-neutral-900 mb-3 flex items-center">
+              <History className="w-5 h-5 mr-2" />
+              Todas las Transacciones
+            </h3>
+            
+            {globalHistory.length === 0 ? (
+              <div className="text-center py-8 text-neutral-600">
+                No hay transacciones registradas
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {globalHistory.map((transaction: any) => {
+                  const clientName = transaction.accounts?.users?.full_name || 'Cliente desconocido';
+                  const clientEmail = transaction.accounts?.users?.email || '';
+                  
+                  return (
+                    <div 
+                      key={transaction.id}
+                      className="bg-white border border-neutral-200 rounded-apple p-4 hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge variant={transaction.type === 'cargo' ? 'danger' : 'success'}>
+                              {transaction.type === 'cargo' ? 'Cargo' : 'Pago'}
+                            </Badge>
+                            <span className="text-sm font-medium text-neutral-700">{clientName}</span>
+                          </div>
+                          {clientEmail && (
+                            <p className="text-xs text-neutral-500 mb-1">{clientEmail}</p>
+                          )}
+                          <p className="text-2xl font-bold text-neutral-900">
+                            {transaction.type === 'cargo' ? '+' : '-'}{formatCurrency(transaction.amount)}
+                          </p>
+                        </div>
+                        <div className="text-right text-sm">
+                          <p className="text-neutral-600">
+                            {new Date(transaction.created_at).toLocaleDateString('es-AR', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric'
+                            })}
+                          </p>
+                          <p className="text-neutral-500">
+                            {new Date(transaction.created_at).toLocaleTimeString('es-AR', {
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                      {transaction.description && (
+                        <p className="text-sm text-neutral-600 mt-2">
+                          {transaction.description}
+                        </p>
+                      )}
+                      {(transaction.balance_before !== null || transaction.balance_after !== null) && (
+                        <div className="mt-3 pt-3 border-t border-neutral-200">
+                          <div className="flex justify-between text-sm">
+                            <div>
+                              <p className="text-neutral-500">Saldo anterior:</p>
+                              <p className="font-semibold text-neutral-700">
+                                {formatCurrency(transaction.balance_before || 0)}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-neutral-500">Saldo después:</p>
+                              <p className="font-semibold text-neutral-700">
+                                {formatCurrency(transaction.balance_after || 0)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="flex gap-3">
+            <Button variant="ghost" onClick={() => setShowGlobalHistoryModal(false)} className="flex-1">
+              Cerrar
+            </Button>
+          </div>
+        </div>
       </Modal>
 
       {/* Toast Container */}

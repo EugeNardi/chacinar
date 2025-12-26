@@ -27,6 +27,8 @@ export interface Transaction {
   approved_by: string | null;
   created_at: string;
   approved_at: string | null;
+  balance_before: number | null;
+  balance_after: number | null;
 }
 
 export interface ModificationRequest {
