@@ -1,10 +1,8 @@
 'use client';
 
-import { QRCodeSVG } from 'qrcode.react';
 import { formatCurrency } from '@/lib/utils';
-import { generateMercadoPagoQR } from '@/lib/mercadoPagoQR';
 import Card from './ui/Card';
-import { Wallet, Copy, Check, ExternalLink } from 'lucide-react';
+import { Wallet, Copy, Check } from 'lucide-react';
 import { useState } from 'react';
 
 interface MercadoPagoQRProps {
@@ -14,20 +12,19 @@ interface MercadoPagoQRProps {
 }
 
 export default function MercadoPagoQR({ wallet, amount, clientName }: MercadoPagoQRProps) {
-  const [copied, setCopied] = useState(false);
+  const [copiedAlias, setCopiedAlias] = useState(false);
+  const [copiedAmount, setCopiedAmount] = useState(false);
 
-  // Generar link de Mercado Pago REAL con alias
-  const description = `Pago Chacinar - ${clientName}`;
-  const mercadoPagoLink = generateMercadoPagoQR(wallet, amount, description);
-
-  const handleCopy = () => {
+  const handleCopyAlias = () => {
     navigator.clipboard.writeText(wallet);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setCopiedAlias(true);
+    setTimeout(() => setCopiedAlias(false), 2000);
   };
 
-  const handleOpenLink = () => {
-    window.open(mercadoPagoLink, '_blank');
+  const handleCopyAmount = () => {
+    navigator.clipboard.writeText(amount.toString());
+    setCopiedAmount(true);
+    setTimeout(() => setCopiedAmount(false), 2000);
   };
 
   if (!wallet) {
@@ -44,79 +41,157 @@ export default function MercadoPagoQR({ wallet, amount, clientName }: MercadoPag
   }
 
   return (
-    <Card>
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Wallet className="w-6 h-6 text-blue-600" />
+    <Card className="bg-gradient-to-br from-blue-50 via-white to-blue-50 border-2 border-blue-200 shadow-lg">
+      <div className="space-y-5">
+        {/* Header profesional */}
+        <div className="flex items-center justify-between pb-4 border-b-2 border-blue-100">
+          <div className="flex items-center space-x-3">
+            <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg">
+              <Wallet className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h3 className="font-semibold text-neutral-900">Pagar con Mercado Pago</h3>
-              <p className="text-sm text-neutral-600">Escanea el código QR</p>
+              <h3 className="font-bold text-xl text-neutral-900">Pagar con Mercado Pago</h3>
+              <p className="text-sm text-blue-600 font-medium">✓ Transferencia instantánea y segura</p>
             </div>
           </div>
         </div>
 
-        {/* QR Code */}
-        <div className="bg-white p-6 rounded-lg border-2 border-neutral-200 flex justify-center">
-          <QRCodeSVG
-            value={mercadoPagoLink}
-            size={200}
-            level="H"
-            includeMargin={true}
-          />
-        </div>
-
-        {/* Monto */}
-        <div className="bg-brand/5 p-4 rounded-lg text-center">
-          <p className="text-sm text-neutral-600 mb-1">Monto a pagar</p>
-          <p className="text-3xl font-bold text-brand">
+        {/* Paso 1: Monto */}
+        <div className="bg-gradient-to-br from-blue-600 to-blue-700 p-6 rounded-2xl text-center shadow-xl">
+          <p className="text-sm text-blue-100 mb-2 font-medium">Paso 1: Monto a transferir</p>
+          <p className="text-5xl font-bold text-white mb-1">
             {formatCurrency(amount)}
           </p>
+          <button
+            onClick={handleCopyAmount}
+            className="mt-3 px-5 py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl transition-all flex items-center gap-2 mx-auto font-semibold border border-white/30"
+          >
+            {copiedAmount ? (
+              <>
+                <Check className="w-5 h-5" />
+                <span>¡Monto copiado!</span>
+              </>
+            ) : (
+              <>
+                <Copy className="w-5 h-5" />
+                <span>Copiar monto</span>
+              </>
+            )}
+          </button>
         </div>
 
-        {/* Billetera */}
-        <div className="bg-neutral-50 p-3 rounded-lg">
-          <p className="text-xs text-neutral-600 mb-2">Billetera de Mercado Pago:</p>
-          <div className="flex items-center justify-between">
-            <code className="text-sm font-mono text-neutral-900">{wallet}</code>
+        {/* Paso 2: Alias */}
+        <div className="bg-white p-5 rounded-2xl border-2 border-blue-200 shadow-md">
+          <p className="text-sm font-bold text-neutral-700 mb-3">Paso 2: Alias de destino</p>
+          <div className="flex items-center gap-3 bg-blue-50 p-4 rounded-xl border border-blue-200">
+            <div className="flex-1">
+              <code className="text-2xl font-mono font-bold text-blue-700 block">{wallet}</code>
+            </div>
             <button
-              onClick={handleCopy}
-              className="p-2 hover:bg-neutral-200 rounded-lg transition-colors"
-              title="Copiar billetera"
+              onClick={handleCopyAlias}
+              className="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all flex items-center gap-2 font-bold shadow-lg hover:shadow-xl active:scale-95"
+              title="Copiar alias"
             >
-              {copied ? (
-                <Check className="w-4 h-4 text-green-600" />
+              {copiedAlias ? (
+                <>
+                  <Check className="w-5 h-5" />
+                  <span>¡Copiado!</span>
+                </>
               ) : (
-                <Copy className="w-4 h-4 text-neutral-600" />
+                <>
+                  <Copy className="w-5 h-5" />
+                  <span>Copiar alias</span>
+                </>
               )}
             </button>
           </div>
         </div>
 
-        {/* Botón para abrir en Mercado Pago */}
-        <button
-          onClick={handleOpenLink}
-          className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-apple flex items-center justify-center gap-2 transition-colors"
-        >
-          <Wallet className="w-5 h-5" />
-          Abrir en Mercado Pago
-          <ExternalLink className="w-4 h-4" />
-        </button>
+        {/* Paso 3: Instrucciones visuales */}
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-5 rounded-2xl border-2 border-green-200">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+              <span className="text-white font-bold text-sm">3</span>
+            </div>
+            <p className="font-bold text-lg text-neutral-900">Pasos en Mercado Pago</p>
+          </div>
+          
+          <div className="space-y-3">
+            <div className="flex items-start gap-3 bg-white p-3 rounded-xl border border-green-200">
+              <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-green-700 font-bold text-xs">1</span>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-neutral-900">Abre Mercado Pago</p>
+                <p className="text-xs text-neutral-600">En tu celular</p>
+              </div>
+            </div>
 
-        {/* Instrucciones */}
-        <div className="text-sm text-neutral-600 space-y-2">
-          <p className="font-medium text-neutral-900">Instrucciones:</p>
-          <ol className="list-decimal list-inside space-y-1">
-            <li>Escanea el código QR o haz clic en el botón azul</li>
-            <li>Se abrirá Mercado Pago con el monto exacto</li>
-            <li>Verifica el monto: {formatCurrency(amount)}</li>
-            <li>Confirma el pago</li>
-          </ol>
-          <p className="text-xs text-neutral-500 mt-3">
-            💡 El saldo se actualizará después de que el administrador confirme tu pago
-          </p>
+            <div className="flex items-start gap-3 bg-white p-3 rounded-xl border border-green-200">
+              <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-green-700 font-bold text-xs">2</span>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-neutral-900">Toca "Transferir"</p>
+                <p className="text-xs text-neutral-600">O "Enviar dinero"</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 bg-white p-3 rounded-xl border border-green-200">
+              <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-green-700 font-bold text-xs">3</span>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-neutral-900">Pega el alias</p>
+                <code className="text-xs bg-blue-50 px-2 py-1 rounded font-mono text-blue-700">{wallet}</code>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 bg-white p-3 rounded-xl border border-green-200">
+              <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-green-700 font-bold text-xs">4</span>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-neutral-900">Ingresa el monto</p>
+                <span className="text-xs font-bold text-blue-600">{formatCurrency(amount)}</span>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 bg-white p-3 rounded-xl border border-green-200">
+              <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-green-700 font-bold text-xs">5</span>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-neutral-900">Confirma el pago</p>
+                <p className="text-xs text-neutral-600">Verifica que todo esté correcto</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 bg-gradient-to-r from-amber-50 to-orange-50 p-3 rounded-xl border-2 border-amber-300">
+              <div className="w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-white font-bold text-xs">6</span>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-bold text-amber-900">¡Importante! Vuelve aquí</p>
+                <p className="text-xs text-amber-800">Usa el botón "Notificar Pago" más abajo</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Nota de seguridad */}
+        <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 p-4 rounded-2xl">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
+              <span className="text-2xl">🔒</span>
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-purple-900 mb-1">Pago 100% seguro</p>
+              <p className="text-xs text-purple-800">
+                Tu pago se procesa directamente en Mercado Pago. Una vez que el administrador confirme tu transferencia, tu saldo se actualizará automáticamente.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </Card>

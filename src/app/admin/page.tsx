@@ -13,7 +13,6 @@ import Modal from '@/components/ui/Modal';
 import { generateBillPDF } from '@/lib/pdfGenerator';
 import { generateReceipt } from '@/lib/receiptGenerator';
 import { useToast } from '@/hooks/useToast';
-import { sendWhatsAppMessage } from '@/lib/whatsappService';
 import MonthlyHistory from '@/components/MonthlyHistory';
 
 export default function AdminDashboard() {
@@ -183,24 +182,6 @@ export default function AdminDashboard() {
           read: false,
         });
 
-      // Enviar WhatsApp si es un pago aprobado y el cliente tiene teléfono
-      if (type === 'pago') {
-        const { data: clientData } = await supabase
-          .from('users')
-          .select('phone, full_name')
-          .eq('id', account.user_id)
-          .single();
-
-        if (clientData?.phone) {
-          await sendWhatsAppMessage({
-            to: clientData.phone,
-            clientName: clientData.full_name,
-            paymentAmount: amount,
-            totalBalance: newBalance,
-            type: 'payment'
-          });
-        }
-      }
 
       showToast(
         type === 'pago' 
@@ -804,23 +785,7 @@ export default function AdminDashboard() {
               receiptNumber: receiptNumber
             });
 
-            // Enviar mensaje de WhatsApp si el cliente tiene teléfono
-            if (selectedClient.phone) {
-              const whatsappSent = await sendWhatsAppMessage({
-                to: selectedClient.phone,
-                clientName: selectedClient.full_name,
-                chargeAmount: amount,
-                totalBalance: newBalance,
-                description: balanceDescription || 'Carga de saldo',
-                type: 'charge'
-              });
-
-              if (whatsappSent) {
-                console.log('Mensaje de WhatsApp enviado al cliente');
-              } else {
-                console.warn('No se pudo enviar el mensaje de WhatsApp');
-              }
-            }
+            console.warn('No se pudo enviar el mensaje de WhatsApp');
 
             setShowAddBalanceModal(false);
             setBalanceAmount('');
@@ -941,20 +906,6 @@ export default function AdminDashboard() {
                 });
             }
 
-            // Enviar mensaje de WhatsApp si el cliente tiene teléfono
-            if (selectedClient.phone) {
-              const whatsappSent = await sendWhatsAppMessage({
-                to: selectedClient.phone,
-                clientName: selectedClient.full_name,
-                paymentAmount: amount,
-                totalBalance: newBalance,
-                type: 'payment'
-              });
-
-              if (whatsappSent) {
-                console.log('Mensaje de WhatsApp enviado al cliente sobre el descuento');
-              }
-            }
 
             setShowDeductBalanceModal(false);
             setBalanceAmount('');

@@ -22,7 +22,7 @@ export default function Button({
     secondary: 'bg-neutral-200 text-neutral-900 hover:bg-neutral-300',
     ghost: 'bg-transparent text-neutral-700 hover:bg-neutral-100',
     danger: 'bg-red-600 text-white hover:bg-red-700 shadow-sm',
-    outline: 'bg-transparent border-2 border-current hover:bg-current hover:text-white',
+    outline: 'bg-transparent border-2 border-neutral-300 text-neutral-700 hover:bg-neutral-100 hover:border-neutral-400',
   };
   
   const sizes = {

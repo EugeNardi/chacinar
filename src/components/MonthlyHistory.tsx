@@ -62,8 +62,8 @@ export default function MonthlyHistory({ transactions, showClientName = false }:
         grouped[monthKey].totalPayments += transaction.amount;
       }
 
-      // Actualizar balance final del mes
-      if (transaction.balance_after !== null) {
+      // Actualizar balance final del mes (usar balance_after si existe, sino calcular)
+      if (transaction.balance_after !== null && transaction.balance_after !== undefined) {
         grouped[monthKey].endBalance = transaction.balance_after;
       }
     });
@@ -171,16 +171,20 @@ export default function MonthlyHistory({ transactions, showClientName = false }:
                     </div>
 
                     {/* Saldo final */}
-                    <div className="bg-neutral-100 rounded-lg p-3">
+                    <div className={`rounded-lg p-3 ${
+                      (month.endBalance || 0) > 0 ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'
+                    }`}>
                       <div className="flex items-center gap-2 mb-1">
-                        <DollarSign className="w-4 h-4 text-neutral-600" />
-                        <p className="text-xs text-neutral-700 font-medium">Saldo final</p>
+                        <DollarSign className={`w-4 h-4 ${(month.endBalance || 0) > 0 ? 'text-red-600' : 'text-green-600'}`} />
+                        <p className={`text-xs font-medium ${(month.endBalance || 0) > 0 ? 'text-red-700' : 'text-green-700'}`}>Saldo final</p>
                       </div>
-                      <p className="text-lg sm:text-xl font-bold text-neutral-900">
-                        {formatCurrency(month.endBalance)}
+                      <p className={`text-lg sm:text-xl font-bold ${
+                        (month.endBalance || 0) > 0 ? 'text-red-900' : 'text-green-900'
+                      }`}>
+                        {formatCurrency(month.endBalance || 0)}
                       </p>
-                      <p className="text-xs text-neutral-600 mt-1">
-                        del mes
+                      <p className={`text-xs mt-1 ${(month.endBalance || 0) > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                        {(month.endBalance || 0) > 0 ? 'Debe' : 'Al día'}
                       </p>
                     </div>
                   </div>
