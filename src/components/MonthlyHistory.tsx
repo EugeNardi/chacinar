@@ -139,7 +139,7 @@ export default function MonthlyHistory({ transactions, showClientName = false }:
                     <div className="bg-red-50 rounded-lg p-3">
                       <p className="text-xs text-red-700 font-medium mb-1">Cargos</p>
                       <p className="text-xl font-bold text-red-900">
-                        $ {month.totalCharges.toFixed(2)}
+                        $ {(month.totalCharges || 0).toFixed(2)}
                       </p>
                       <p className="text-xs text-red-600 mt-1">
                         {month.charges.length} {month.charges.length === 1 ? 'cargo' : 'cargos'}
@@ -150,7 +150,7 @@ export default function MonthlyHistory({ transactions, showClientName = false }:
                     <div className="bg-green-50 rounded-lg p-3">
                       <p className="text-xs text-green-700 font-medium mb-1">Pagos</p>
                       <p className="text-xl font-bold text-green-900">
-                        $ {month.totalPayments.toFixed(2)}
+                        $ {(month.totalPayments || 0).toFixed(2)}
                       </p>
                       <p className="text-xs text-green-600 mt-1">
                         {month.payments.length} {month.payments.length === 1 ? 'pago' : 'pagos'}
@@ -158,32 +158,32 @@ export default function MonthlyHistory({ transactions, showClientName = false }:
                     </div>
 
                     {/* Cambio neto */}
-                    <div className={`rounded-lg p-3 ${month.netChange > 0 ? 'bg-orange-50' : 'bg-blue-50'}`}>
-                      <p className={`text-xs font-medium mb-1 ${month.netChange > 0 ? 'text-orange-700' : 'text-blue-700'}`}>
+                    <div className={`rounded-lg p-3 ${(month.netChange || 0) > 0 ? 'bg-orange-50' : 'bg-blue-50'}`}>
+                      <p className={`text-xs font-medium mb-1 ${(month.netChange || 0) > 0 ? 'text-orange-700' : 'text-blue-700'}`}>
                         Cambio
                       </p>
-                      <p className={`text-xl font-bold ${month.netChange > 0 ? 'text-orange-900' : 'text-blue-900'}`}>
-                        {month.netChange > 0 ? '+ $' : '- $'} {Math.abs(month.netChange).toFixed(2)}
+                      <p className={`text-xl font-bold ${(month.netChange || 0) > 0 ? 'text-orange-900' : 'text-blue-900'}`}>
+                        {(month.netChange || 0) > 0 ? '+ $' : '- $'} {Math.abs(month.netChange || 0).toFixed(2)}
                       </p>
-                      <p className={`text-xs mt-1 ${month.netChange > 0 ? 'text-orange-600' : 'text-blue-600'}`}>
-                        {month.netChange > 0 ? 'Incremento' : 'Reducción'}
+                      <p className={`text-xs mt-1 ${(month.netChange || 0) > 0 ? 'text-orange-600' : 'text-blue-600'}`}>
+                        {(month.netChange || 0) > 0 ? 'Incremento' : 'Reducción'}
                       </p>
                     </div>
 
                     {/* Saldo final */}
                     <div className={`rounded-lg p-3 ${
-                      month.endBalance > 0 ? 'bg-red-50' : 'bg-green-50'
+                      (month.endBalance || 0) > 0 ? 'bg-red-50' : 'bg-green-50'
                     }`}>
-                      <p className={`text-xs font-medium mb-1 ${month.endBalance > 0 ? 'text-red-700' : 'text-green-700'}`}>
+                      <p className={`text-xs font-medium mb-1 ${(month.endBalance || 0) > 0 ? 'text-red-700' : 'text-green-700'}`}>
                         Saldo final del mes
                       </p>
                       <p className={`text-xl font-bold ${
-                        month.endBalance > 0 ? 'text-red-900' : 'text-green-900'
+                        (month.endBalance || 0) > 0 ? 'text-red-900' : 'text-green-900'
                       }`}>
-                        $ {month.endBalance.toFixed(2)}
+                        $ {(month.endBalance || 0).toFixed(2)}
                       </p>
-                      <p className={`text-xs mt-1 ${month.endBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                        {month.endBalance > 0 ? 'Debe' : 'Al día'}
+                      <p className={`text-xs mt-1 ${(month.endBalance || 0) > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                        {(month.endBalance || 0) > 0 ? 'Debe' : 'Al día'}
                       </p>
                     </div>
                   </div>
