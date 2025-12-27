@@ -2,6 +2,7 @@ export interface User {
   id: string;
   email: string;
   full_name: string;
+  phone?: string;
   role: 'admin' | 'cliente';
   created_at: string;
   updated_at: string;
@@ -42,4 +43,16 @@ export interface ModificationRequest {
   reviewed_by: string | null;
   created_at: string;
   reviewed_at: string | null;
+}
+
+export interface ClientNote {
+  id: string;
+  user_id: string;
+  created_by: string;
+  note_type: 'contact' | 'reminder' | 'general';
+  subject: string;
+  message: string;
+  contact_method?: 'whatsapp' | 'phone' | 'email' | 'in_person' | 'other';
+  created_at: string;
+  updated_at: string;
 }

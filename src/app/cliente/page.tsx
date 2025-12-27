@@ -10,6 +10,7 @@ import { formatCurrency, formatDate } from '@/lib/utils';
 import { Account, Transaction, ModificationRequest } from '@/types';
 import { DollarSign, Plus, History, Clock, User as UserIcon, Calendar, Wallet, MessageCircle, Send } from 'lucide-react';
 import MercadoPagoQR from '@/components/MercadoPagoQR';
+import MonthlyHistory from '@/components/MonthlyHistory';
 
 export default function ClienteDashboard() {
   const [account, setAccount] = useState<Account | null>(null);
@@ -424,69 +425,16 @@ export default function ClienteDashboard() {
         </div>
       )}
 
-      {/* Transaction History */}
+      {/* Monthly Transaction History */}
       <div>
-        <h3 className="text-xl font-bold text-neutral-900 mb-4 flex items-center">
-          <History className="w-5 h-5 mr-2" />
-          Historial de Movimientos
+        <h3 className="text-xl sm:text-2xl font-bold text-neutral-900 mb-4 flex items-center gap-2">
+          <History className="w-6 h-6" />
+          Historial Mensual
         </h3>
-        <Card>
-          <div className="space-y-4">
-            {transactions.length === 0 ? (
-              <p className="text-center text-neutral-600 py-8">
-                No hay movimientos registrados
-              </p>
-            ) : (
-              transactions.map((transaction) => (
-                <div
-                  key={transaction.id}
-                  className="py-3 border-b border-neutral-100 last:border-0"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <Badge variant={transaction.type === 'cargo' ? 'danger' : 'success'}>
-                          {transaction.type === 'cargo' ? 'Cargo' : 'Pago'}
-                        </Badge>
-                      </div>
-                      {transaction.description && (
-                        <p className="text-sm text-neutral-600 font-medium">{transaction.description}</p>
-                      )}
-                      <div className="flex items-center text-xs text-neutral-500 mt-2">
-                        <Calendar className="w-3 h-3 mr-1" />
-                        <span>{formatDate(transaction.created_at)}</span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className={`text-xl font-bold ${
-                        transaction.type === 'cargo' ? 'text-red-600' : 'text-green-600'
-                      }`}>
-                        {transaction.type === 'cargo' ? '+' : '-'}
-                        {formatCurrency(transaction.amount)}
-                      </p>
-                    </div>
-                  </div>
-                  {(transaction.balance_before !== null || transaction.balance_after !== null) && (
-                    <div className="mt-2 pt-2 border-t border-neutral-100 flex justify-between text-xs">
-                      <div>
-                        <span className="text-neutral-500">Saldo anterior: </span>
-                        <span className="font-semibold text-neutral-700">
-                          {formatCurrency(transaction.balance_before || 0)}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-neutral-500">Saldo después: </span>
-                        <span className="font-semibold text-neutral-700">
-                          {formatCurrency(transaction.balance_after || 0)}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-        </Card>
+        <p className="text-sm text-neutral-600 mb-4">
+          Visualiza tus cargos y pagos organizados por mes
+        </p>
+        <MonthlyHistory transactions={transactions} />
       </div>
     </div>
   );

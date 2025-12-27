@@ -13,6 +13,8 @@ import Modal from '@/components/ui/Modal';
 import { generateBillPDF } from '@/lib/pdfGenerator';
 import { generateReceipt } from '@/lib/receiptGenerator';
 import { useToast } from '@/hooks/useToast';
+import { sendWhatsAppMessage } from '@/lib/whatsappService';
+import MonthlyHistory from '@/components/MonthlyHistory';
 
 export default function AdminDashboard() {
   const [clients, setClients] = useState<(User & { account: Account })[]>([]);
@@ -22,6 +24,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedClient, setSelectedClient] = useState<(User & { account: Account }) | null>(null);
   const [showAddBalanceModal, setShowAddBalanceModal] = useState(false);
+  const [showDeductBalanceModal, setShowDeductBalanceModal] = useState(false);
   const [showConfigMPModal, setShowConfigMPModal] = useState(false);
   const [balanceAmount, setBalanceAmount] = useState('');
   const [balanceDescription, setBalanceDescription] = useState('');
@@ -42,6 +45,13 @@ export default function AdminDashboard() {
   const [bankCbu, setBankCbu] = useState('');
   const [showGlobalHistoryModal, setShowGlobalHistoryModal] = useState(false);
   const [globalHistory, setGlobalHistory] = useState<any[]>([]);
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [clientPhone, setClientPhone] = useState('');
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [contactSubject, setContactSubject] = useState('');
+  const [contactMessage, setContactMessage] = useState('');
+  const [contactMethod, setContactMethod] = useState<'whatsapp' | 'phone' | 'email' | 'in_person' | 'other'>('whatsapp');
+  const [clientNotes, setClientNotes] = useState<any[]>([]);
   const { showToast, ToastContainer } = useToast();
 
   useEffect(() => {
@@ -173,6 +183,25 @@ export default function AdminDashboard() {
           read: false,
         });
 
+      // Enviar WhatsApp si es un pago aprobado y el cliente tiene teléfono
+      if (type === 'pago') {
+        const { data: clientData } = await supabase
+          .from('users')
+          .select('phone, full_name')
+          .eq('id', account.user_id)
+          .single();
+
+        if (clientData?.phone) {
+          await sendWhatsAppMessage({
+            to: clientData.phone,
+            clientName: clientData.full_name,
+            paymentAmount: amount,
+            totalBalance: newBalance,
+            type: 'payment'
+          });
+        }
+      }
+
       showToast(
         type === 'pago' 
           ? `Pago aprobado exitosamente. Saldo descontado: ${formatCurrency(amount)}` 
@@ -275,12 +304,62 @@ export default function AdminDashboard() {
         .eq('account_id', client.account.id)
         .order('created_at', { ascending: false });
 
+      // Cargar todas las notas del cliente
+      const { data: notesData } = await supabase
+        .from('client_notes')
+        .select('*')
+        .eq('user_id', client.id)
+        .order('created_at', { ascending: false });
+
       setClientHistory(transactionsData || []);
+      setClientNotes(notesData || []);
       setSelectedClient(client);
       setShowHistoryModal(true);
     } catch (error) {
       console.error('Error cargando historial:', error);
       showToast('Error al cargar el historial', 'error');
+    }
+  }
+
+  async function handleContactClient(client: User & { account: Account }) {
+    setSelectedClient(client);
+    setContactSubject('');
+    setContactMessage('');
+    setContactMethod('whatsapp');
+    setShowContactModal(true);
+  }
+
+  async function handleSaveContact() {
+    if (!selectedClient || !contactSubject.trim() || !contactMessage.trim()) {
+      showToast('Por favor completa todos los campos', 'warning');
+      return;
+    }
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      // Guardar la nota de contacto
+      await supabase
+        .from('client_notes')
+        .insert({
+          user_id: selectedClient.id,
+          created_by: session?.user.id,
+          note_type: 'contact',
+          subject: contactSubject,
+          message: contactMessage,
+          contact_method: contactMethod
+        });
+
+      showToast('Contacto registrado exitosamente', 'success');
+      setShowContactModal(false);
+      
+      // Recargar datos si el modal de historial está abierto
+      if (showHistoryModal) {
+        handleShowHistory(selectedClient);
+      }
+    } catch (error) {
+      console.error('Error guardando contacto:', error);
+      showToast('Error al guardar el contacto', 'error');
     }
   }
 
@@ -559,12 +638,17 @@ export default function AdminDashboard() {
                   </Badge>
                 </div>
                 <p className="text-sm text-neutral-600">{client.email}</p>
+                {client.phone && (
+                  <p className="text-sm text-green-600 flex items-center gap-1">
+                    📱 {client.phone}
+                  </p>
+                )}
                 <div className="pt-3 border-t border-neutral-200">
                   <p className="text-sm text-neutral-600 mb-1">Saldo</p>
                   <p className="text-2xl font-bold text-neutral-900 mb-3">
                     {formatCurrency(client.account?.balance || 0)}
                   </p>
-                  <div className="grid grid-cols-3 gap-2" onClick={(e) => e.stopPropagation()}>
+                  <div className="grid grid-cols-2 gap-2 mb-2" onClick={(e) => e.stopPropagation()}>
                     <Button
                       size="sm"
                       variant="primary"
@@ -572,12 +656,45 @@ export default function AdminDashboard() {
                         e.stopPropagation();
                         setSelectedClient(client);
                         setBalanceAmount('');
+                        setBalanceDescription('');
                         setShowAddBalanceModal(true);
                       }}
-                      className="bg-brand hover:bg-brand-dark"
-                      title="Cargar saldo"
+                      className="bg-green-600 hover:bg-green-700"
+                      title="Cargar saldo (sumar)"
                     >
-                      <Plus className="w-4 h-4" />
+                      <Plus className="w-4 h-4 mr-1" />
+                      Sumar
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedClient(client);
+                        setBalanceAmount('');
+                        setBalanceDescription('');
+                        setShowDeductBalanceModal(true);
+                      }}
+                      className="bg-red-600 hover:bg-red-700"
+                      title="Descontar saldo (restar)"
+                    >
+                      <span className="mr-1">−</span>
+                      Restar
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2" onClick={(e) => e.stopPropagation()}>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedClient(client);
+                        setClientPhone(client.phone || '');
+                        setShowPhoneModal(true);
+                      }}
+                      title="Configurar Teléfono"
+                    >
+                      📱
                     </Button>
                     <Button
                       size="sm"
@@ -685,6 +802,24 @@ export default function AdminDashboard() {
               receiptNumber: receiptNumber
             });
 
+            // Enviar mensaje de WhatsApp si el cliente tiene teléfono
+            if (selectedClient.phone) {
+              const whatsappSent = await sendWhatsAppMessage({
+                to: selectedClient.phone,
+                clientName: selectedClient.full_name,
+                chargeAmount: amount,
+                totalBalance: newBalance,
+                description: balanceDescription || 'Carga de saldo',
+                type: 'charge'
+              });
+
+              if (whatsappSent) {
+                console.log('Mensaje de WhatsApp enviado al cliente');
+              } else {
+                console.warn('No se pudo enviar el mensaje de WhatsApp');
+              }
+            }
+
             setShowAddBalanceModal(false);
             setBalanceAmount('');
             setBalanceDescription('');
@@ -736,6 +871,158 @@ export default function AdminDashboard() {
         </form>
       </Modal>
 
+      {/* Modal Descontar Saldo */}
+      <Modal
+        isOpen={showDeductBalanceModal}
+        onClose={() => setShowDeductBalanceModal(false)}
+        title={`Descontar saldo a ${selectedClient?.full_name}`}
+      >
+        <form onSubmit={async (e) => {
+          e.preventDefault();
+          if (!selectedClient?.account) return;
+          
+          const amount = parseFloat(balanceAmount);
+          if (isNaN(amount) || amount <= 0) {
+            showToast('Ingresa un monto válido', 'warning');
+            return;
+          }
+
+          const currentBalance = selectedClient.account.balance || 0;
+          if (amount > currentBalance) {
+            showToast('El monto a descontar no puede ser mayor al saldo actual', 'error');
+            return;
+          }
+
+          try {
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (!selectedClient.account) {
+              showToast('Error: Cliente sin cuenta asociada', 'error');
+              return;
+            }
+            
+            // Obtener saldo actual antes de modificar
+            const balanceBefore = selectedClient.account.balance || 0;
+            const newBalance = balanceBefore - amount;
+            
+            // Actualizar saldo
+            await supabase
+              .from('accounts')
+              .update({ balance: newBalance })
+              .eq('id', selectedClient.account.id);
+
+            // Crear transacción con saldo antes y después (tipo pago porque reduce el saldo)
+            await supabase
+              .from('transactions')
+              .insert({
+                account_id: selectedClient.account.id,
+                type: 'pago',
+                amount,
+                description: balanceDescription || `Descuento de saldo por administrador`,
+                status: 'aprobado',
+                created_by: session?.user.id,
+                approved_by: session?.user.id,
+                approved_at: new Date().toISOString(),
+                balance_before: balanceBefore,
+                balance_after: newBalance,
+              });
+
+            // Crear notificación para el cliente
+            if (selectedClient.id) {
+              await supabase
+                .from('notifications')
+                .insert({
+                  user_id: selectedClient.id,
+                  title: 'Saldo descontado',
+                  message: `Se descontó ${formatCurrency(amount)} de tu cuenta. ${balanceDescription || ''}\n\nSaldo anterior: ${formatCurrency(balanceBefore)}\nSaldo actual: ${formatCurrency(newBalance)}`,
+                  type: 'info'
+                });
+            }
+
+            // Enviar mensaje de WhatsApp si el cliente tiene teléfono
+            if (selectedClient.phone) {
+              const whatsappSent = await sendWhatsAppMessage({
+                to: selectedClient.phone,
+                clientName: selectedClient.full_name,
+                paymentAmount: amount,
+                totalBalance: newBalance,
+                type: 'payment'
+              });
+
+              if (whatsappSent) {
+                console.log('Mensaje de WhatsApp enviado al cliente sobre el descuento');
+              }
+            }
+
+            setShowDeductBalanceModal(false);
+            setBalanceAmount('');
+            setBalanceDescription('');
+            loadData();
+            showToast(`Saldo descontado exitosamente. Nuevo saldo: ${formatCurrency(newBalance)}`, 'success');
+          } catch (error) {
+            console.error('Error:', error);
+            showToast('Error al descontar saldo', 'error');
+          }
+        }} className="space-y-4">
+          <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg mb-4">
+            <p className="text-sm text-amber-800">
+              <strong>⚠️ Atención:</strong> Vas a <strong>restar/descontar</strong> saldo de la cuenta del cliente. Esta acción quedará registrada en el historial.
+            </p>
+          </div>
+
+          <Input
+            type="number"
+            label="Monto a descontar"
+            placeholder="0.00"
+            value={balanceAmount}
+            onChange={(e) => setBalanceAmount(e.target.value)}
+            required
+            min="0.01"
+            step="0.01"
+            max={selectedClient?.account?.balance || 0}
+          />
+
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-2">
+              Motivo del descuento (opcional)
+            </label>
+            <textarea
+              className="w-full px-4 py-2.5 rounded-apple border border-neutral-300 bg-white text-neutral-900 placeholder:text-neutral-400"
+              placeholder="Ej: Corrección de saldo, ajuste, etc..."
+              value={balanceDescription}
+              onChange={(e) => setBalanceDescription(e.target.value)}
+              rows={3}
+            />
+          </div>
+
+          <div className="bg-neutral-50 p-4 rounded-lg space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-neutral-600">Saldo actual:</span>
+              <span className="font-bold text-neutral-900">{formatCurrency(selectedClient?.account?.balance || 0)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-neutral-600">Monto a descontar:</span>
+              <span className="font-bold text-red-600">- {formatCurrency(parseFloat(balanceAmount) || 0)}</span>
+            </div>
+            <div className="border-t border-neutral-300 pt-2 flex justify-between">
+              <span className="font-medium text-neutral-900">Nuevo saldo:</span>
+              <span className="font-bold text-lg text-neutral-900">
+                {formatCurrency((selectedClient?.account?.balance || 0) - (parseFloat(balanceAmount) || 0))}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <Button type="submit" variant="danger" className="flex-1 bg-red-600 hover:bg-red-700">
+              Descontar Saldo
+            </Button>
+            <Button type="button" variant="ghost" onClick={() => setShowDeductBalanceModal(false)}>
+              Cancelar
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
       {/* Modal Configurar Mercado Pago */}
       <Modal
         isOpen={showConfigMPModal}
@@ -775,6 +1062,63 @@ export default function AdminDashboard() {
               Guardar
             </Button>
             <Button type="button" variant="ghost" onClick={() => setShowConfigMPModal(false)}>
+              Cancelar
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Modal Configurar Teléfono */}
+      <Modal
+        isOpen={showPhoneModal}
+        onClose={() => setShowPhoneModal(false)}
+        title={`Configurar Teléfono - ${selectedClient?.full_name}`}
+      >
+        <form onSubmit={async (e) => {
+          e.preventDefault();
+          if (!selectedClient) return;
+
+          try {
+            await supabase
+              .from('users')
+              .update({ phone: clientPhone })
+              .eq('id', selectedClient.id);
+
+            setShowPhoneModal(false);
+            loadData();
+            showToast('Teléfono actualizado correctamente', 'success');
+          } catch (error) {
+            console.error('Error:', error);
+            showToast('Error al actualizar teléfono', 'error');
+          }
+        }} className="space-y-4">
+          <Input
+            type="tel"
+            label="Teléfono del Cliente"
+            placeholder="3467494443"
+            value={clientPhone}
+            onChange={(e) => setClientPhone(e.target.value)}
+          />
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <p className="text-sm text-blue-900 mb-2">
+              📱 <strong>Mensajes automáticos por WhatsApp</strong>
+            </p>
+            <p className="text-xs text-blue-800">
+              Cuando agregues un teléfono, el cliente recibirá mensajes automáticos desde el número de Sebastián (+54 9 3467 49 4443) cada vez que:
+            </p>
+            <ul className="text-xs text-blue-800 mt-2 space-y-1 ml-4">
+              <li>• Se le cargue un nuevo saldo</li>
+              <li>• Se apruebe un pago realizado</li>
+            </ul>
+            <p className="text-xs text-blue-700 mt-2">
+              Formato: Solo números, sin espacios ni guiones (ej: 3467494443)
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <Button type="submit" variant="primary" className="flex-1 bg-brand hover:bg-brand-dark">
+              Guardar
+            </Button>
+            <Button type="button" variant="ghost" onClick={() => setShowPhoneModal(false)}>
               Cancelar
             </Button>
           </div>
@@ -977,85 +1321,18 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Historial de Transacciones */}
+          {/* Historial Mensual de Transacciones */}
           <div>
             <h3 className="font-semibold text-neutral-900 mb-3 flex items-center">
               <History className="w-5 h-5 mr-2" />
-              Historial de Movimientos
+              Historial Mensual
             </h3>
-            
-            {clientHistory.length === 0 ? (
-              <div className="text-center py-8 text-neutral-600">
-                No hay transacciones registradas
-              </div>
-            ) : (
-              <div className="space-y-3 max-h-96 overflow-y-auto">
-                {clientHistory.map((transaction: any) => (
-                  <div 
-                    key={transaction.id}
-                    className="bg-white border border-neutral-200 rounded-apple p-4 hover:shadow-md transition-shadow"
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge variant={transaction.type === 'cargo' ? 'danger' : 'success'}>
-                            {transaction.type === 'cargo' ? 'Cargo' : 'Pago'}
-                          </Badge>
-                          <Badge variant={
-                            transaction.status === 'aprobado' ? 'success' : 
-                            transaction.status === 'rechazado' ? 'danger' : 
-                            'warning'
-                          }>
-                            {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
-                          </Badge>
-                        </div>
-                        <p className="text-2xl font-bold text-neutral-900">
-                          {transaction.type === 'cargo' ? '+' : '-'}{formatCurrency(transaction.amount)}
-                        </p>
-                      </div>
-                      <div className="text-right text-sm">
-                        <p className="text-neutral-600">
-                          {new Date(transaction.created_at).toLocaleDateString('es-AR', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric'
-                          })}
-                        </p>
-                        <p className="text-neutral-500">
-                          {new Date(transaction.created_at).toLocaleTimeString('es-AR', {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                    {transaction.description && (
-                      <p className="text-sm text-neutral-600 mt-2">
-                        {transaction.description}
-                      </p>
-                    )}
-                    {(transaction.balance_before !== null || transaction.balance_after !== null) && (
-                      <div className="mt-3 pt-3 border-t border-neutral-200">
-                        <div className="flex justify-between text-sm">
-                          <div>
-                            <p className="text-neutral-500">Saldo anterior:</p>
-                            <p className="font-semibold text-neutral-700">
-                              {formatCurrency(transaction.balance_before || 0)}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-neutral-500">Saldo después:</p>
-                            <p className="font-semibold text-neutral-700">
-                              {formatCurrency(transaction.balance_after || 0)}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+            <p className="text-sm text-neutral-600 mb-4">
+              Visualiza los cargos y pagos organizados por mes
+            </p>
+            <div className="max-h-[500px] overflow-y-auto">
+              <MonthlyHistory transactions={clientHistory} />
+            </div>
           </div>
 
           <div className="flex gap-3">
