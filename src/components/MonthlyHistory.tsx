@@ -108,7 +108,7 @@ export default function MonthlyHistory({ transactions, showClientName = false }:
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {monthlyData.map((month) => {
         const isExpanded = expandedMonths.has(month.key);
         const allTransactions = [...month.charges, ...month.payments].sort(
@@ -116,85 +116,104 @@ export default function MonthlyHistory({ transactions, showClientName = false }:
         );
 
         return (
-          <Card key={month.key} className="overflow-hidden">
+          <Card key={month.key} className="overflow-hidden shadow-sm hover:shadow-md transition-shadow">
             {/* Header del mes */}
             <button
               onClick={() => toggleMonth(month.key)}
-              className="w-full text-left p-4 sm:p-6 hover:bg-neutral-50 transition-colors"
+              className="w-full text-left p-4 hover:bg-neutral-50 transition-colors active:bg-neutral-100"
             >
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <Calendar className="w-5 h-5 text-blue-600" />
+                  {/* Título del mes */}
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Calendar className="w-4 h-4 text-white" />
                     </div>
-                    <h3 className="text-lg sm:text-xl font-bold text-neutral-900 capitalize truncate">
+                    <h3 className="text-base font-bold text-neutral-900 capitalize">
                       {month.month}
                     </h3>
                   </div>
 
-                  {/* Resumen del mes */}
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                    {/* Cargos */}
-                    <div className="bg-red-50 rounded-lg p-3">
-                      <p className="text-xs text-red-700 font-medium mb-1">Cargos</p>
-                      <p className="text-xl font-bold text-red-900">
-                        $ {(month.totalCharges || 0).toFixed(2)}
-                      </p>
-                      <p className="text-xs text-red-600 mt-1">
-                        {month.charges.length} {month.charges.length === 1 ? 'cargo' : 'cargos'}
-                      </p>
+                  {/* Resumen compacto para móvil */}
+                  <div className="space-y-2">
+                    {/* Fila 1: Cargos y Pagos */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="bg-red-50 rounded-lg p-2.5 border border-red-100">
+                        <p className="text-[10px] text-red-600 font-semibold uppercase tracking-wide mb-0.5">Cargos</p>
+                        <p className="text-lg font-bold text-red-900">
+                          ${(month.totalCharges || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
+                        <p className="text-[10px] text-red-600 mt-0.5">
+                          {month.charges.length} {month.charges.length === 1 ? 'cargo' : 'cargos'}
+                        </p>
+                      </div>
+
+                      <div className="bg-green-50 rounded-lg p-2.5 border border-green-100">
+                        <p className="text-[10px] text-green-600 font-semibold uppercase tracking-wide mb-0.5">Pagos</p>
+                        <p className="text-lg font-bold text-green-900">
+                          ${(month.totalPayments || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
+                        <p className="text-[10px] text-green-600 mt-0.5">
+                          {month.payments.length} {month.payments.length === 1 ? 'pago' : 'pagos'}
+                        </p>
+                      </div>
                     </div>
 
-                    {/* Pagos */}
-                    <div className="bg-green-50 rounded-lg p-3">
-                      <p className="text-xs text-green-700 font-medium mb-1">Pagos</p>
-                      <p className="text-xl font-bold text-green-900">
-                        $ {(month.totalPayments || 0).toFixed(2)}
-                      </p>
-                      <p className="text-xs text-green-600 mt-1">
-                        {month.payments.length} {month.payments.length === 1 ? 'pago' : 'pagos'}
-                      </p>
-                    </div>
-
-                    {/* Cambio neto */}
-                    <div className={`rounded-lg p-3 ${(month.netChange || 0) > 0 ? 'bg-orange-50' : 'bg-blue-50'}`}>
-                      <p className={`text-xs font-medium mb-1 ${(month.netChange || 0) > 0 ? 'text-orange-700' : 'text-blue-700'}`}>
-                        Cambio
-                      </p>
-                      <p className={`text-xl font-bold ${(month.netChange || 0) > 0 ? 'text-orange-900' : 'text-blue-900'}`}>
-                        {(month.netChange || 0) > 0 ? '+ $' : '- $'} {Math.abs(month.netChange || 0).toFixed(2)}
-                      </p>
-                      <p className={`text-xs mt-1 ${(month.netChange || 0) > 0 ? 'text-orange-600' : 'text-blue-600'}`}>
-                        {(month.netChange || 0) > 0 ? 'Incremento' : 'Reducción'}
-                      </p>
-                    </div>
-
-                    {/* Saldo final */}
-                    <div className={`rounded-lg p-3 ${
-                      (month.endBalance || 0) > 0 ? 'bg-red-50' : 'bg-green-50'
-                    }`}>
-                      <p className={`text-xs font-medium mb-1 ${(month.endBalance || 0) > 0 ? 'text-red-700' : 'text-green-700'}`}>
-                        Saldo final del mes
-                      </p>
-                      <p className={`text-xl font-bold ${
-                        (month.endBalance || 0) > 0 ? 'text-red-900' : 'text-green-900'
+                    {/* Fila 2: Cambio y Saldo final */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className={`rounded-lg p-2.5 border ${
+                        (month.netChange || 0) > 0 
+                          ? 'bg-orange-50 border-orange-100' 
+                          : 'bg-blue-50 border-blue-100'
                       }`}>
-                        $ {(month.endBalance || 0).toFixed(2)}
-                      </p>
-                      <p className={`text-xs mt-1 ${(month.endBalance || 0) > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                        {(month.endBalance || 0) > 0 ? 'Debe' : 'Al día'}
-                      </p>
+                        <p className={`text-[10px] font-semibold uppercase tracking-wide mb-0.5 ${
+                          (month.netChange || 0) > 0 ? 'text-orange-600' : 'text-blue-600'
+                        }`}>
+                          Cambio
+                        </p>
+                        <p className={`text-lg font-bold ${
+                          (month.netChange || 0) > 0 ? 'text-orange-900' : 'text-blue-900'
+                        }`}>
+                          {(month.netChange || 0) > 0 ? '+' : '-'}${Math.abs(month.netChange || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
+                        <p className={`text-[10px] mt-0.5 ${
+                          (month.netChange || 0) > 0 ? 'text-orange-600' : 'text-blue-600'
+                        }`}>
+                          {(month.netChange || 0) > 0 ? 'Incremento' : 'Reducción'}
+                        </p>
+                      </div>
+
+                      <div className={`rounded-lg p-2.5 border ${
+                        (month.endBalance || 0) > 0 
+                          ? 'bg-red-50 border-red-200' 
+                          : 'bg-green-50 border-green-200'
+                      }`}>
+                        <p className={`text-[10px] font-semibold uppercase tracking-wide mb-0.5 ${
+                          (month.endBalance || 0) > 0 ? 'text-red-600' : 'text-green-600'
+                        }`}>
+                          Saldo final
+                        </p>
+                        <p className={`text-lg font-bold ${
+                          (month.endBalance || 0) > 0 ? 'text-red-900' : 'text-green-900'
+                        }`}>
+                          ${(month.endBalance || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
+                        <p className={`text-[10px] mt-0.5 ${
+                          (month.endBalance || 0) > 0 ? 'text-red-600' : 'text-green-600'
+                        }`}>
+                          {(month.endBalance || 0) > 0 ? 'Debe' : 'Al día'}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Botón expandir */}
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0 pt-1">
                   {isExpanded ? (
-                    <ChevronUp className="w-6 h-6 text-neutral-400" />
+                    <ChevronUp className="w-5 h-5 text-neutral-400" />
                   ) : (
-                    <ChevronDown className="w-6 h-6 text-neutral-400" />
+                    <ChevronDown className="w-5 h-5 text-neutral-400" />
                   )}
                 </div>
               </div>
@@ -202,49 +221,54 @@ export default function MonthlyHistory({ transactions, showClientName = false }:
 
             {/* Detalle de transacciones */}
             {isExpanded && (
-              <div className="border-t border-neutral-200 bg-neutral-50">
-                <div className="p-4 sm:p-6 space-y-3">
-                  <h4 className="font-semibold text-neutral-900 mb-4">
-                    Detalle de transacciones ({allTransactions.length})
+              <div className="border-t border-neutral-200 bg-gradient-to-b from-neutral-50 to-white">
+                <div className="p-3 space-y-2">
+                  <h4 className="text-xs font-semibold text-neutral-600 uppercase tracking-wide px-1 mb-2">
+                    Detalle ({allTransactions.length})
                   </h4>
                   {allTransactions.map((transaction) => (
                     <div
                       key={transaction.id}
-                      className="bg-white rounded-lg p-4 border border-neutral-200 hover:border-neutral-300 transition-colors"
+                      className={`rounded-lg p-3 border-l-4 ${
+                        transaction.type === 'cargo'
+                          ? 'bg-red-50/50 border-red-400'
+                          : 'bg-green-50/50 border-green-400'
+                      }`}
                     >
-                      <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2 flex-wrap">
-                            <Badge variant={transaction.type === 'cargo' ? 'danger' : 'success'}>
-                              {transaction.type === 'cargo' ? '📈 Cargo' : '💰 Pago'}
-                            </Badge>
-                            <span className="text-xs text-neutral-500">
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <span className={`text-xs font-bold px-2 py-0.5 rounded ${
+                              transaction.type === 'cargo'
+                                ? 'bg-red-100 text-red-700'
+                                : 'bg-green-100 text-green-700'
+                            }`}>
+                              {transaction.type === 'cargo' ? 'CARGO' : 'PAGO'}
+                            </span>
+                            <span className="text-[10px] text-neutral-500">
                               {formatDate(transaction.created_at)}
                             </span>
                           </div>
                           
                           {transaction.description && (
-                            <p className="text-sm text-neutral-700 mb-2">{transaction.description}</p>
+                            <p className="text-xs text-neutral-700 mb-2 line-clamp-2">{transaction.description}</p>
                           )}
                           
-                          <div className="flex flex-wrap gap-4 text-xs text-neutral-600">
+                          <div className="flex flex-col gap-0.5 text-[10px] text-neutral-600">
                             <div>
-                              <span className="font-medium">Saldo anterior:</span>{' '}
-                              {formatCurrency(transaction.balance_before || 0)}
+                              <span className="font-semibold">Antes:</span> {formatCurrency(transaction.balance_before || 0)}
                             </div>
                             <div>
-                              <span className="font-medium">Saldo después:</span>{' '}
-                              {formatCurrency(transaction.balance_after || 0)}
+                              <span className="font-semibold">Después:</span> {formatCurrency(transaction.balance_after || 0)}
                             </div>
                           </div>
                         </div>
                         
                         <div className="text-right flex-shrink-0">
-                          <p className={`text-xl sm:text-2xl font-bold ${
+                          <p className={`text-xl font-bold ${
                             transaction.type === 'cargo' ? 'text-red-600' : 'text-green-600'
                           }`}>
-                            {transaction.type === 'cargo' ? '+' : '-'}
-                            {formatCurrency(transaction.amount)}
+                            {transaction.type === 'cargo' ? '+' : '-'}{formatCurrency(transaction.amount)}
                           </p>
                         </div>
                       </div>
