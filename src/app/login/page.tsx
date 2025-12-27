@@ -55,7 +55,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-neutral-50 to-neutral-100 p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-600 rounded-apple mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-red-600 rounded-apple mb-4">
             <LogIn className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-neutral-900 mb-2">Chacinar</h1>
@@ -91,7 +91,7 @@ export default function LoginPage() {
             <Button
               type="submit"
               variant="primary"
-              className="w-full"
+              className="w-full bg-red-600 hover:bg-red-700"
               disabled={loading}
             >
               {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}

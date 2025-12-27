@@ -309,14 +309,14 @@ export default function AuthPage() {
           <div className="grid sm:grid-cols-2 gap-4 sm:gap-6 mb-6 px-2 sm:px-0">
             {/* Login Admin */}
             <Card 
-              className="p-4 sm:p-6 cursor-pointer hover:shadow-lg transition-all border-2 hover:border-brand active:scale-95"
+              className="p-4 sm:p-6 cursor-pointer hover:shadow-lg transition-all border-2 hover:border-red-600 active:scale-95"
               onClick={() => {
                 setUserType('admin');
                 setMode('login-admin');
               }}
             >
               <div className="text-center">
-                <div className="w-16 h-16 bg-brand rounded-xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-red-600 rounded-xl flex items-center justify-center mx-auto mb-4">
                   <Shield className="w-10 h-10 text-white" />
                 </div>
                 <h3 className="text-xl font-bold text-neutral-900 mb-2">Administrador</h3>
@@ -326,14 +326,14 @@ export default function AuthPage() {
 
             {/* Login Cliente */}
             <Card 
-              className="p-4 sm:p-6 cursor-pointer hover:shadow-lg transition-all border-2 hover:border-blue-500 active:scale-95"
+              className="p-4 sm:p-6 cursor-pointer hover:shadow-lg transition-all border-2 hover:border-red-600 active:scale-95"
               onClick={() => {
                 setUserType('cliente');
                 setMode('login-cliente');
               }}
             >
               <div className="text-center">
-                <div className="w-16 h-16 bg-blue-500 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-red-600 rounded-xl flex items-center justify-center mx-auto mb-4">
                   <User className="w-10 h-10 text-white" />
                 </div>
                 <h3 className="text-lg sm:text-xl font-bold text-neutral-900 mb-2">Cliente</h3>
@@ -408,7 +408,7 @@ export default function AuthPage() {
               type="submit"
               variant="primary"
               disabled={loading}
-              className="w-full bg-brand hover:bg-brand-dark"
+              className="w-full bg-red-600 hover:bg-red-700"
             >
               {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
             </Button>
@@ -416,7 +416,7 @@ export default function AuthPage() {
             <button
               type="button"
               onClick={() => setMode('forgot-password')}
-              className="w-full text-sm text-brand hover:text-brand-dark underline"
+              className="w-full text-sm text-red-600 hover:text-red-700 underline"
             >
               ¿Olvidaste tu contraseña?
             </button>
@@ -483,7 +483,7 @@ export default function AuthPage() {
               type="submit"
               variant="primary"
               disabled={loading}
-              className="w-full bg-blue-500 hover:bg-blue-600"
+              className="w-full bg-red-600 hover:bg-red-700"
             >
               {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
             </Button>
@@ -491,7 +491,7 @@ export default function AuthPage() {
             <button
               type="button"
               onClick={() => setMode('forgot-password')}
-              className="w-full text-sm text-blue-600 hover:text-blue-700 underline"
+              className="w-full text-sm text-red-600 hover:text-red-700 underline"
             >
               ¿Olvidaste tu contraseña?
             </button>
@@ -554,7 +554,7 @@ export default function AuthPage() {
               type="submit"
               variant="primary"
               disabled={loading}
-              className="w-full bg-brand hover:bg-brand-dark"
+              className="w-full bg-red-600 hover:bg-red-700"
             >
               {loading ? 'Enviando...' : 'Enviar Email de Recuperación'}
             </Button>
@@ -580,7 +580,7 @@ export default function AuthPage() {
         <div className="max-w-2xl w-full">
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-brand rounded-xl flex items-center justify-center shadow-lg">
+              <div className="w-16 h-16 bg-red-600 rounded-xl flex items-center justify-center shadow-lg">
                 <Shield className="w-10 h-10 text-white" />
               </div>
             </div>
@@ -594,11 +594,11 @@ export default function AuthPage() {
 
           <div className="grid md:grid-cols-2 gap-6 mb-6">
             <Card
-              className="p-8 text-center hover:shadow-xl transition-all cursor-pointer border-2 border-transparent hover:border-brand"
+              className="p-8 text-center hover:shadow-xl transition-all cursor-pointer border-2 border-transparent hover:border-red-600"
               onClick={() => setUserType('cliente')}
             >
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-                <User className="w-8 h-8 text-blue-600" />
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
+                <User className="w-8 h-8 text-red-600" />
               </div>
               <h3 className="text-xl font-bold text-neutral-900 mb-2">Cliente</h3>
               <p className="text-neutral-600 text-sm">
@@ -607,11 +607,11 @@ export default function AuthPage() {
             </Card>
 
             <Card
-              className="p-8 text-center hover:shadow-xl transition-all cursor-pointer border-2 border-transparent hover:border-brand"
+              className="p-8 text-center hover:shadow-xl transition-all cursor-pointer border-2 border-transparent hover:border-red-600"
               onClick={() => setUserType('admin')}
             >
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-brand/10 rounded-full mb-4">
-                <Building2 className="w-8 h-8 text-brand" />
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
+                <Building2 className="w-8 h-8 text-red-600" />
               </div>
               <h3 className="text-xl font-bold text-neutral-900 mb-2">Administrador</h3>
               <p className="text-neutral-600 text-sm">
@@ -743,7 +743,7 @@ export default function AuthPage() {
             type="submit"
             variant="primary"
             disabled={loading}
-            className="w-full bg-brand hover:bg-brand-dark"
+            className="w-full bg-red-600 hover:bg-red-700"
           >
             {loading ? 'Creando cuenta...' : 'Crear Cuenta'}
           </Button>

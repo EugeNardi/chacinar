@@ -491,38 +491,38 @@ export default function AdminDashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        <Card className="p-4 sm:p-6">
+        <Card className="p-4 sm:p-6 bg-gradient-to-br from-red-50 to-white border-red-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs sm:text-sm text-neutral-600">Total Clientes</p>
-              <p className="text-2xl sm:text-3xl font-bold text-neutral-900 mt-1">{clients.length}</p>
+              <p className="text-xs sm:text-sm text-red-700 font-medium">Total Clientes</p>
+              <p className="text-2xl sm:text-3xl font-bold text-red-900 mt-1">{clients.length}</p>
             </div>
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-apple flex items-center justify-center">
-              <Users className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-600 rounded-apple flex items-center justify-center shadow-lg">
+              <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
           </div>
         </Card>
 
-        <Card className="p-4 sm:p-6">
+        <Card className="p-4 sm:p-6 bg-gradient-to-br from-red-50 to-white border-red-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs sm:text-sm text-neutral-600">Deuda Total</p>
-              <p className="text-2xl sm:text-3xl font-bold text-neutral-900 mt-1">{formatCurrency(totalDebt)}</p>
+              <p className="text-xs sm:text-sm text-red-700 font-medium">Deuda Total</p>
+              <p className="text-2xl sm:text-3xl font-bold text-red-900 mt-1">{formatCurrency(totalDebt)}</p>
             </div>
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-apple flex items-center justify-center">
-              <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-600 rounded-apple flex items-center justify-center shadow-lg">
+              <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
           </div>
         </Card>
 
-        <Card className="p-4 sm:p-6 sm:col-span-2 lg:col-span-1">
+        <Card className="p-4 sm:p-6 sm:col-span-2 lg:col-span-1 bg-gradient-to-br from-amber-50 to-white border-amber-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs sm:text-sm text-neutral-600">Solicitudes Pendientes</p>
-              <p className="text-2xl sm:text-3xl font-bold text-neutral-900 mt-1">{pendingRequests.length}</p>
+              <p className="text-xs sm:text-sm text-amber-700 font-medium">Solicitudes Pendientes</p>
+              <p className="text-2xl sm:text-3xl font-bold text-amber-900 mt-1">{pendingRequests.length}</p>
             </div>
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-100 rounded-apple flex items-center justify-center">
-              <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-amber-500 rounded-apple flex items-center justify-center shadow-lg">
+              <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
           </div>
         </Card>
@@ -633,8 +633,8 @@ export default function AdminDashboard() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-neutral-900">{client.full_name}</h3>
-                  <Badge variant={client.account?.balance > 0 ? 'danger' : 'success'}>
-                    {client.account?.balance > 0 ? 'Debe' : 'Al día'}
+                  <Badge variant={client.account?.balance > 0 ? 'danger' : 'success'} className="font-semibold">
+                    {client.account?.balance > 0 ? '⚠️ Debe' : '✓ Al día'}
                   </Badge>
                 </div>
                 <p className="text-sm text-neutral-600">{client.email}</p>
@@ -645,7 +645,9 @@ export default function AdminDashboard() {
                 )}
                 <div className="pt-3 border-t border-neutral-200">
                   <p className="text-sm text-neutral-600 mb-1">Saldo</p>
-                  <p className="text-2xl font-bold text-neutral-900 mb-3">
+                  <p className={`text-2xl font-bold mb-3 ${
+                    (client.account?.balance || 0) > 0 ? 'text-red-600' : 'text-green-600'
+                  }`}>
                     {formatCurrency(client.account?.balance || 0)}
                   </p>
                   <div className="grid grid-cols-2 gap-2 mb-2" onClick={(e) => e.stopPropagation()}>
