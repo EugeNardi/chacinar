@@ -30,9 +30,9 @@ export default function MonthlyHistory({ transactions, showClientName = false }:
   const monthlyData = useMemo(() => {
     const grouped: { [key: string]: MonthlyData } = {};
 
-    // Ordenar transacciones por fecha (más antiguas primero)
+    // Ordenar transacciones por fecha (más recientes primero para procesamiento)
     const sortedTransactions = [...transactions].sort(
-      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
 
     sortedTransactions.forEach((transaction) => {
@@ -49,8 +49,8 @@ export default function MonthlyHistory({ transactions, showClientName = false }:
           totalCharges: 0,
           totalPayments: 0,
           netChange: 0,
-          startBalance: transaction.balance_before || 0,
-          endBalance: transaction.balance_after || 0,
+          startBalance: 0,
+          endBalance: 0,
         };
       }
 
@@ -61,16 +61,25 @@ export default function MonthlyHistory({ transactions, showClientName = false }:
         grouped[monthKey].payments.push(transaction);
         grouped[monthKey].totalPayments += transaction.amount;
       }
-
-      // Actualizar balance final del mes (usar balance_after si existe, sino calcular)
-      if (transaction.balance_after !== null && transaction.balance_after !== undefined) {
-        grouped[monthKey].endBalance = transaction.balance_after;
-      }
     });
 
-    // Calcular cambio neto
+    // Calcular cambio neto y saldo final para cada mes
     Object.keys(grouped).forEach((key) => {
+      const monthTransactions = [...grouped[key].charges, ...grouped[key].payments]
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      
       grouped[key].netChange = grouped[key].totalCharges - grouped[key].totalPayments;
+      
+      // El saldo final es el balance_after de la transacción más reciente del mes
+      if (monthTransactions.length > 0 && monthTransactions[0].balance_after !== null) {
+        grouped[key].endBalance = monthTransactions[0].balance_after;
+      }
+      
+      // El saldo inicial es el balance_before de la transacción más antigua del mes
+      const oldestTransaction = monthTransactions[monthTransactions.length - 1];
+      if (oldestTransaction && oldestTransaction.balance_before !== null) {
+        grouped[key].startBalance = oldestTransaction.balance_before;
+      }
     });
 
     // Convertir a array y ordenar por fecha (más recientes primero)
@@ -125,15 +134,12 @@ export default function MonthlyHistory({ transactions, showClientName = false }:
                   </div>
 
                   {/* Resumen del mes */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                     {/* Cargos */}
                     <div className="bg-red-50 rounded-lg p-3">
-                      <div className="flex items-center gap-2 mb-1">
-                        <TrendingUp className="w-4 h-4 text-red-600" />
-                        <p className="text-xs text-red-700 font-medium">Cargos</p>
-                      </div>
-                      <p className="text-lg sm:text-xl font-bold text-red-900">
-                        {formatCurrency(month.totalCharges)}
+                      <p className="text-xs text-red-700 font-medium mb-1">Cargos</p>
+                      <p className="text-xl font-bold text-red-900">
+                        $ {month.totalCharges.toFixed(2)}
                       </p>
                       <p className="text-xs text-red-600 mt-1">
                         {month.charges.length} {month.charges.length === 1 ? 'cargo' : 'cargos'}
@@ -142,12 +148,9 @@ export default function MonthlyHistory({ transactions, showClientName = false }:
 
                     {/* Pagos */}
                     <div className="bg-green-50 rounded-lg p-3">
-                      <div className="flex items-center gap-2 mb-1">
-                        <TrendingDown className="w-4 h-4 text-green-600" />
-                        <p className="text-xs text-green-700 font-medium">Pagos</p>
-                      </div>
-                      <p className="text-lg sm:text-xl font-bold text-green-900">
-                        {formatCurrency(month.totalPayments)}
+                      <p className="text-xs text-green-700 font-medium mb-1">Pagos</p>
+                      <p className="text-xl font-bold text-green-900">
+                        $ {month.totalPayments.toFixed(2)}
                       </p>
                       <p className="text-xs text-green-600 mt-1">
                         {month.payments.length} {month.payments.length === 1 ? 'pago' : 'pagos'}
@@ -155,36 +158,32 @@ export default function MonthlyHistory({ transactions, showClientName = false }:
                     </div>
 
                     {/* Cambio neto */}
-                    <div className={`rounded-lg p-3 ${month.netChange > 0 ? 'bg-amber-50' : 'bg-blue-50'}`}>
-                      <div className="flex items-center gap-2 mb-1">
-                        <DollarSign className={`w-4 h-4 ${month.netChange > 0 ? 'text-amber-600' : 'text-blue-600'}`} />
-                        <p className={`text-xs font-medium ${month.netChange > 0 ? 'text-amber-700' : 'text-blue-700'}`}>
-                          Cambio
-                        </p>
-                      </div>
-                      <p className={`text-lg sm:text-xl font-bold ${month.netChange > 0 ? 'text-amber-900' : 'text-blue-900'}`}>
-                        {month.netChange > 0 ? '+' : ''}{formatCurrency(month.netChange)}
+                    <div className={`rounded-lg p-3 ${month.netChange > 0 ? 'bg-orange-50' : 'bg-blue-50'}`}>
+                      <p className={`text-xs font-medium mb-1 ${month.netChange > 0 ? 'text-orange-700' : 'text-blue-700'}`}>
+                        Cambio
                       </p>
-                      <p className={`text-xs mt-1 ${month.netChange > 0 ? 'text-amber-600' : 'text-blue-600'}`}>
+                      <p className={`text-xl font-bold ${month.netChange > 0 ? 'text-orange-900' : 'text-blue-900'}`}>
+                        {month.netChange > 0 ? '+ $' : '- $'} {Math.abs(month.netChange).toFixed(2)}
+                      </p>
+                      <p className={`text-xs mt-1 ${month.netChange > 0 ? 'text-orange-600' : 'text-blue-600'}`}>
                         {month.netChange > 0 ? 'Incremento' : 'Reducción'}
                       </p>
                     </div>
 
                     {/* Saldo final */}
                     <div className={`rounded-lg p-3 ${
-                      (month.endBalance || 0) > 0 ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'
+                      month.endBalance > 0 ? 'bg-red-50' : 'bg-green-50'
                     }`}>
-                      <div className="flex items-center gap-2 mb-1">
-                        <DollarSign className={`w-4 h-4 ${(month.endBalance || 0) > 0 ? 'text-red-600' : 'text-green-600'}`} />
-                        <p className={`text-xs font-medium ${(month.endBalance || 0) > 0 ? 'text-red-700' : 'text-green-700'}`}>Saldo final</p>
-                      </div>
-                      <p className={`text-lg sm:text-xl font-bold ${
-                        (month.endBalance || 0) > 0 ? 'text-red-900' : 'text-green-900'
-                      }`}>
-                        {formatCurrency(month.endBalance || 0)}
+                      <p className={`text-xs font-medium mb-1 ${month.endBalance > 0 ? 'text-red-700' : 'text-green-700'}`}>
+                        Saldo final del mes
                       </p>
-                      <p className={`text-xs mt-1 ${(month.endBalance || 0) > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                        {(month.endBalance || 0) > 0 ? 'Debe' : 'Al día'}
+                      <p className={`text-xl font-bold ${
+                        month.endBalance > 0 ? 'text-red-900' : 'text-green-900'
+                      }`}>
+                        $ {month.endBalance.toFixed(2)}
+                      </p>
+                      <p className={`text-xs mt-1 ${month.endBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                        {month.endBalance > 0 ? 'Debe' : 'Al día'}
                       </p>
                     </div>
                   </div>
