@@ -141,32 +141,27 @@ export default function ClienteDashboard() {
         </Card>
       )}
 
-      {/* Últimas Boletas */}
-      {transactions.filter(t => t.type === 'cargo').length > 0 && (
-        <Card>
-          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-            <span className="text-2xl">📋</span>
-            Últimas Boletas
-          </h2>
+      {/* Últimas Transacciones */}
+      {transactions.length > 0 && (
+        <Card className="bg-gradient-to-br from-brand to-brand-dark text-white">
+          <h2 className="text-xl font-bold mb-4">📋 Historial de Transacciones</h2>
           <div className="space-y-3 max-h-[600px] overflow-y-auto">
-            {transactions
-              .filter(t => t.type === 'cargo')
-              .map((transaction) => (
-                <div key={transaction.id} className="bg-gradient-to-br from-red-50 to-red-100 border border-red-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex-1">
-                      <p className="text-2xl font-bold text-red-900">{formatCurrency(transaction.amount)}</p>
-                      <p className="text-sm text-red-700 mt-1">{formatDate(transaction.created_at)}</p>
-                    </div>
-                    <Badge variant="success" className="bg-green-100 text-green-800 border-green-300">
-                      Aprobado
-                    </Badge>
+            {transactions.map((transaction) => (
+              <div key={transaction.id} className="bg-white/10 backdrop-blur-sm rounded-apple p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <p className="font-semibold text-lg">{formatCurrency(transaction.amount)}</p>
+                    <p className="text-sm text-white/80">{formatDate(transaction.created_at)}</p>
                   </div>
-                  {transaction.description && (
-                    <p className="text-sm text-red-800 mt-2">{transaction.description}</p>
-                  )}
+                  <Badge variant={transaction.type === 'cargo' ? 'danger' : 'success'} className="bg-white/20 text-white border-white/30">
+                    {transaction.type === 'cargo' ? 'Cargo' : 'Pago'}
+                  </Badge>
                 </div>
-              ))}
+                {transaction.description && (
+                  <p className="text-sm text-white/90">{transaction.description}</p>
+                )}
+              </div>
+            ))}
           </div>
         </Card>
       )}
