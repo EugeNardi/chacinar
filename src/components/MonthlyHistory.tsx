@@ -56,10 +56,10 @@ export default function MonthlyHistory({ transactions, showClientName = false }:
 
       if (transaction.type === 'cargo') {
         grouped[monthKey].charges.push(transaction);
-        grouped[monthKey].totalCharges += transaction.amount;
+        grouped[monthKey].totalCharges += (transaction.amount || 0);
       } else {
         grouped[monthKey].payments.push(transaction);
-        grouped[monthKey].totalPayments += transaction.amount;
+        grouped[monthKey].totalPayments += (transaction.amount || 0);
       }
     });
 
