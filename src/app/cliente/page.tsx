@@ -181,16 +181,37 @@ export default function ClienteDashboard() {
             <p className="text-5xl font-bold text-neutral-900 mb-6">
               {formatCurrency(account?.balance || 0)}
             </p>
-            <p className="text-sm text-neutral-600 mb-4">
+            <p className="text-sm text-neutral-600 mb-6">
               {(account?.balance || 0) > 0 ? 'Debes pagar este monto' : 'Estás al día'}
             </p>
+            
+            {/* Botón destacado para notificar pago */}
+            {(account?.balance || 0) > 0 && (
+              <div className="mb-4">
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    setRequestType('pago');
+                    setShowRequestForm(true);
+                  }}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3"
+                >
+                  <Clock className="w-5 h-5 mr-2" />
+                  💰 Notificar Pago Realizado
+                </Button>
+                <p className="text-xs text-neutral-500 mt-2">
+                  Solicita el descuento de tu saldo después de realizar el pago
+                </p>
+              </div>
+            )}
+            
             <Button
-              variant="primary"
+              variant="outline"
               onClick={() => setShowRequestForm(!showRequestForm)}
-              className="inline-flex items-center bg-brand hover:bg-brand-dark"
+              className="inline-flex items-center"
             >
               <Plus className="w-5 h-5 mr-2" />
-              Nueva solicitud
+              Otra solicitud
             </Button>
           </div>
         </Card>
@@ -281,7 +302,18 @@ export default function ClienteDashboard() {
       {/* Request Form */}
       {showRequestForm && (
         <Card>
-          <h3 className="text-xl font-bold text-neutral-900 mb-4">Nueva Solicitud</h3>
+          <h3 className="text-xl font-bold text-neutral-900 mb-4">
+            {requestType === 'pago' ? '💰 Notificar Pago Realizado' : '📋 Nueva Solicitud'}
+          </h3>
+          
+          {requestType === 'pago' && (
+            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-apple">
+              <p className="text-sm text-green-800">
+                ✅ <strong>Notificación de Pago:</strong> Completa el formulario para notificar al administrador que realizaste un pago. Una vez aprobado, recibirás una notificación con tu nuevo saldo.
+              </p>
+            </div>
+          )}
+          
           <form onSubmit={handleSubmitRequest} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-neutral-700 mb-2">
@@ -293,12 +325,12 @@ export default function ClienteDashboard() {
                   onClick={() => setRequestType('pago')}
                   className={`p-4 rounded-apple border-2 transition-all ${
                     requestType === 'pago'
-                      ? 'border-primary-600 bg-primary-50'
+                      ? 'border-green-600 bg-green-50'
                       : 'border-neutral-200 hover:border-neutral-300'
                   }`}
                 >
-                  <p className="font-semibold text-neutral-900">Pago</p>
-                  <p className="text-sm text-neutral-600">Reducir saldo</p>
+                  <p className="font-semibold text-neutral-900">💰 Pago</p>
+                  <p className="text-sm text-neutral-600">Descontar saldo</p>
                 </button>
                 <button
                   type="button"
@@ -309,8 +341,8 @@ export default function ClienteDashboard() {
                       : 'border-neutral-200 hover:border-neutral-300'
                   }`}
                 >
-                  <p className="font-semibold text-neutral-900">Cargo</p>
-                  <p className="text-sm text-neutral-600">Aumentar saldo</p>
+                  <p className="font-semibold text-neutral-900">📋 Cargo</p>
+                  <p className="text-sm text-neutral-600">Consultar cargo</p>
                 </button>
               </div>
             </div>

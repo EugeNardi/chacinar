@@ -108,10 +108,10 @@ export default function AdminDashboard() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
-      // Obtener saldo actual antes de modificar
+      // Obtener saldo actual antes de modificar y el user_id del cliente
       const { data: account, error: accountError } = await supabase
         .from('accounts')
-        .select('balance')
+        .select('balance, user_id')
         .eq('id', accountId)
         .single();
 
@@ -153,6 +153,25 @@ export default function AdminDashboard() {
         .from('accounts')
         .update({ balance: newBalance })
         .eq('id', accountId);
+
+      // Crear notificación para el cliente
+      const notificationTitle = type === 'pago' 
+        ? '✅ Pago Aprobado' 
+        : '📋 Cargo Aprobado';
+      
+      const notificationMessage = type === 'pago'
+        ? `Tu pago de ${formatCurrency(amount)} ha sido aprobado.\n\n💰 Saldo anterior: ${formatCurrency(balanceBefore)}\n💰 Saldo actual: ${formatCurrency(newBalance)}\n\n¡Gracias por tu pago!`
+        : `Se ha agregado un cargo de ${formatCurrency(amount)} a tu cuenta.\n\n💰 Saldo anterior: ${formatCurrency(balanceBefore)}\n💰 Saldo actual: ${formatCurrency(newBalance)}`;
+
+      await supabase
+        .from('notifications')
+        .insert({
+          user_id: account.user_id,
+          title: notificationTitle,
+          message: notificationMessage,
+          type: 'success',
+          read: false,
+        });
 
       showToast(
         type === 'pago' 
