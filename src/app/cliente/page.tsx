@@ -77,8 +77,20 @@ export default function ClienteDashboard() {
 
       if (accountData) {
         setAccount(accountData);
+        console.log('Account ID:', accountData.id);
+        console.log('Account Balance:', accountData.balance);
 
-        // Cargar transacciones
+        // Cargar TODAS las transacciones primero para debug
+        const { data: allTransactions } = await supabase
+          .from('transactions')
+          .select('*')
+          .eq('account_id', accountData.id);
+        
+        console.log('=== DEBUG: TODAS LAS TRANSACCIONES ===');
+        console.log('Total transacciones en DB:', allTransactions?.length || 0);
+        console.log('Todas las transacciones:', allTransactions);
+
+        // Cargar transacciones aprobadas
         const { data: transactionsData, error: transactionsError } = await supabase
           .from('transactions')
           .select('*')
@@ -86,8 +98,9 @@ export default function ClienteDashboard() {
           .eq('status', 'aprobado')
           .order('created_at', { ascending: false });
 
-        console.log('Transacciones cargadas:', transactionsData?.length || 0);
-        console.log('Transacciones:', transactionsData);
+        console.log('=== TRANSACCIONES APROBADAS ===');
+        console.log('Transacciones aprobadas:', transactionsData?.length || 0);
+        console.log('Detalle:', transactionsData);
         
         if (transactionsError) {
           console.error('Error cargando transacciones:', transactionsError);
