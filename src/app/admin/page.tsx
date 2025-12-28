@@ -7,7 +7,7 @@ import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { User, Account, ModificationRequest } from '@/types';
-import { Users, DollarSign, Clock, CheckCircle, Search, Plus, Wallet, Settings, FileText, History, UserPlus } from 'lucide-react';
+import { Users, DollarSign, Clock, CheckCircle, Search, Plus, Wallet, Settings, FileText, History, UserPlus, Trash2 } from 'lucide-react';
 import Input from '@/components/ui/Input';
 import Modal from '@/components/ui/Modal';
 import { generateBillPDF } from '@/lib/pdfGenerator';
@@ -582,20 +582,6 @@ export default function AdminDashboard() {
               <UserPlus className="w-4 h-4" />
               Agregar Cliente
             </Button>
-            <Button
-              variant="primary"
-              onClick={() => {
-                setBillAmount('');
-                setBillDescription('');
-                setBillDate(new Date().toISOString().split('T')[0]);
-                setSelectedClient(null);
-                setShowNewBillModal(true);
-              }}
-              className="bg-brand hover:bg-brand-dark"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Nueva Boleta
-            </Button>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -702,6 +688,35 @@ export default function AdminDashboard() {
                       title="Generar PDF"
                     >
                       <FileText className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <div className="mt-2">
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        if (confirm(`¿Estás seguro de que quieres eliminar a ${client.full_name}? Esta acción no se puede deshacer.`)) {
+                          try {
+                            // Eliminar cuenta asociada
+                            if (client.account?.id) {
+                              await supabase.from('accounts').delete().eq('id', client.account.id);
+                            }
+                            // Eliminar usuario
+                            await supabase.from('users').delete().eq('id', client.id);
+                            showToast('Cliente eliminado exitosamente', 'success');
+                            loadData();
+                          } catch (error) {
+                            console.error('Error eliminando cliente:', error);
+                            showToast('Error al eliminar cliente', 'error');
+                          }
+                        }
+                      }}
+                      className="w-full bg-red-600 hover:bg-red-700"
+                      title="Eliminar cliente"
+                    >
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      Eliminar Cliente
                     </Button>
                   </div>
                 </div>
@@ -1276,10 +1291,35 @@ export default function AdminDashboard() {
 
           {/* Historial Mensual de Transacciones */}
           <div>
-            <h3 className="font-semibold text-neutral-900 mb-3 flex items-center">
-              <History className="w-5 h-5 mr-2" />
-              Historial Mensual
-            </h3>
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="font-semibold text-neutral-900 flex items-center">
+                <History className="w-5 h-5 mr-2" />
+                Historial Mensual
+              </h3>
+              <Button
+                size="sm"
+                variant="danger"
+                onClick={async () => {
+                  if (confirm(`¿Estás seguro de que quieres eliminar todo el historial de ${selectedClient?.full_name}? Esta acción no se puede deshacer.`)) {
+                    try {
+                      await supabase
+                        .from('transactions')
+                        .delete()
+                        .eq('account_id', selectedClient?.account.id);
+                      setClientHistory([]);
+                      showToast('Historial eliminado exitosamente', 'success');
+                    } catch (error) {
+                      console.error('Error eliminando historial:', error);
+                      showToast('Error al eliminar historial', 'error');
+                    }
+                  }
+                }}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                <Trash2 className="w-4 h-4 mr-1" />
+                Eliminar historial
+              </Button>
+            </div>
             <p className="text-sm text-neutral-600 mb-4">
               Visualiza los cargos y pagos organizados por mes
             </p>

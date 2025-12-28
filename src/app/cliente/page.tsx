@@ -17,6 +17,7 @@ export default function ClienteDashboard() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [requests, setRequests] = useState<ModificationRequest[]>([]);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [showAllTransactions, setShowAllTransactions] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showRequestForm, setShowRequestForm] = useState(false);
   
@@ -144,9 +145,29 @@ export default function ClienteDashboard() {
       {/* Últimas Transacciones */}
       {transactions.length > 0 && (
         <Card className="bg-gradient-to-br from-brand to-brand-dark text-white">
-          <h2 className="text-xl font-bold mb-4">📋 Historial de Transacciones</h2>
-          <div className="space-y-3 max-h-[600px] overflow-y-auto">
-            {transactions.map((transaction) => (
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">📋 Historial de Transacciones</h2>
+            <button
+              onClick={async () => {
+                if (confirm('¿Estás seguro de que quieres eliminar todo el historial? Esta acción no se puede deshacer.')) {
+                  try {
+                    await supabase
+                      .from('transactions')
+                      .delete()
+                      .eq('account_id', account?.id);
+                    setTransactions([]);
+                  } catch (error) {
+                    console.error('Error eliminando historial:', error);
+                  }
+                }
+              }}
+              className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              Eliminar historial
+            </button>
+          </div>
+          <div className="space-y-3">
+            {(showAllTransactions ? transactions : transactions.slice(0, 4)).map((transaction) => (
               <div key={transaction.id} className="bg-white/10 backdrop-blur-sm rounded-apple p-4">
                 <div className="flex justify-between items-start mb-2">
                   <div>
@@ -163,6 +184,14 @@ export default function ClienteDashboard() {
               </div>
             ))}
           </div>
+          {transactions.length > 4 && (
+            <button
+              onClick={() => setShowAllTransactions(!showAllTransactions)}
+              className="w-full mt-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors text-sm font-medium"
+            >
+              {showAllTransactions ? '▲ Mostrar menos' : `▼ Ver todas (${transactions.length})`}
+            </button>
+          )}
         </Card>
       )}
 

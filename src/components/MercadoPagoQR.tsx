@@ -41,39 +41,37 @@ export default function MercadoPagoQR({ wallet, amount, clientName }: MercadoPag
   }
 
   return (
-    <Card className="bg-gradient-to-br from-blue-50 via-white to-blue-50 border-2 border-blue-200 shadow-lg">
-      <div className="space-y-5">
-        {/* Header profesional */}
-        <div className="flex items-center justify-between pb-4 border-b-2 border-blue-100">
-          <div className="flex items-center space-x-3">
-            <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg">
-              <Wallet className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h3 className="font-bold text-xl text-neutral-900">Pagar con Mercado Pago</h3>
-              <p className="text-sm text-blue-600 font-medium">✓ Transferencia instantánea y segura</p>
-            </div>
+    <Card className="bg-white border border-neutral-200">
+      <div className="space-y-4">
+        {/* Header */}
+        <div className="flex items-center gap-3 pb-3 border-b border-neutral-200">
+          <div className="w-12 h-12 bg-neutral-100 rounded-lg flex items-center justify-center">
+            <Wallet className="w-6 h-6 text-neutral-600" />
+          </div>
+          <div>
+            <h3 className="font-bold text-lg text-neutral-900">Pagar con Mercado Pago</h3>
+            <p className="text-sm text-neutral-600">✓ Transferencia instantánea y segura</p>
           </div>
         </div>
 
         {/* Paso 1: Monto */}
-        <div className="bg-gradient-to-br from-blue-600 to-blue-700 p-6 rounded-2xl text-center shadow-xl">
-          <p className="text-sm text-blue-100 mb-2 font-medium">Paso 1: Monto a transferir</p>
-          <p className="text-5xl font-bold text-white mb-1">
+        <div className="bg-neutral-50 p-5 rounded-lg border border-neutral-200 text-center">
+          <p className="text-sm text-neutral-600 mb-2 font-medium">Paso 1: Monto a transferir</p>
+          <p className="text-4xl font-bold text-neutral-900 mb-3">
             {formatCurrency(amount)}
           </p>
           <button
             onClick={handleCopyAmount}
-            className="mt-3 px-5 py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl transition-all flex items-center gap-2 mx-auto font-semibold border border-white/30"
+            className="px-4 py-2 bg-neutral-200 hover:bg-neutral-300 text-neutral-800 rounded-lg transition-all flex items-center gap-2 mx-auto font-medium"
           >
             {copiedAmount ? (
               <>
-                <Check className="w-5 h-5" />
-                <span>¡Monto copiado!</span>
+                <Check className="w-4 h-4" />
+                <span>¡Copiado!</span>
               </>
             ) : (
               <>
-                <Copy className="w-5 h-5" />
+                <Copy className="w-4 h-4" />
                 <span>Copiar monto</span>
               </>
             )}
@@ -81,45 +79,45 @@ export default function MercadoPagoQR({ wallet, amount, clientName }: MercadoPag
         </div>
 
         {/* Paso 2: Alias */}
-        <div className="bg-white p-5 rounded-2xl border-2 border-blue-200 shadow-md">
-          <p className="text-sm font-bold text-neutral-700 mb-3">Paso 2: Alias de destino</p>
-          <div className="flex items-center gap-3 bg-blue-50 p-4 rounded-xl border border-blue-200">
+        <div className="bg-neutral-50 p-4 rounded-lg border border-neutral-200">
+          <p className="text-sm font-semibold text-neutral-700 mb-3">Paso 2: Alias de destino</p>
+          <div className="flex items-center gap-3 bg-white p-3 rounded-lg border border-neutral-300">
             <div className="flex-1">
-              <code className="text-2xl font-mono font-bold text-blue-700 block">{wallet}</code>
+              <code className="text-xl font-mono font-bold text-neutral-800 block">{wallet}</code>
             </div>
             <button
               onClick={handleCopyAlias}
-              className="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all flex items-center gap-2 font-bold shadow-lg hover:shadow-xl active:scale-95"
+              className="px-4 py-2 bg-neutral-800 hover:bg-neutral-900 text-white rounded-lg transition-all flex items-center gap-2 font-medium"
               title="Copiar alias"
             >
               {copiedAlias ? (
                 <>
-                  <Check className="w-5 h-5" />
+                  <Check className="w-4 h-4" />
                   <span>¡Copiado!</span>
                 </>
               ) : (
                 <>
-                  <Copy className="w-5 h-5" />
-                  <span>Copiar alias</span>
+                  <Copy className="w-4 h-4" />
+                  <span>Copiar</span>
                 </>
               )}
             </button>
           </div>
         </div>
 
-        {/* Paso 3: Instrucciones visuales */}
-        <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-5 rounded-2xl border-2 border-green-200">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+        {/* Paso 3: Instrucciones */}
+        <div className="bg-neutral-50 p-4 rounded-lg border border-neutral-200">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-7 h-7 bg-neutral-700 rounded-full flex items-center justify-center">
               <span className="text-white font-bold text-sm">3</span>
             </div>
-            <p className="font-bold text-lg text-neutral-900">Pasos en Mercado Pago</p>
+            <p className="font-semibold text-base text-neutral-900">Pasos en Mercado Pago</p>
           </div>
           
-          <div className="space-y-3">
-            <div className="flex items-start gap-3 bg-white p-3 rounded-xl border border-green-200">
-              <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-green-700 font-bold text-xs">1</span>
+          <div className="space-y-2">
+            <div className="flex items-start gap-2 bg-white p-2.5 rounded-lg border border-neutral-200">
+              <div className="w-5 h-5 bg-neutral-200 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-neutral-700 font-bold text-xs">1</span>
               </div>
               <div className="flex-1">
                 <p className="text-sm font-semibold text-neutral-900">Abre Mercado Pago</p>
@@ -127,9 +125,9 @@ export default function MercadoPagoQR({ wallet, amount, clientName }: MercadoPag
               </div>
             </div>
 
-            <div className="flex items-start gap-3 bg-white p-3 rounded-xl border border-green-200">
-              <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-green-700 font-bold text-xs">2</span>
+            <div className="flex items-start gap-2 bg-white p-2.5 rounded-lg border border-neutral-200">
+              <div className="w-5 h-5 bg-neutral-200 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-neutral-700 font-bold text-xs">2</span>
               </div>
               <div className="flex-1">
                 <p className="text-sm font-semibold text-neutral-900">Toca "Transferir"</p>
@@ -137,29 +135,29 @@ export default function MercadoPagoQR({ wallet, amount, clientName }: MercadoPag
               </div>
             </div>
 
-            <div className="flex items-start gap-3 bg-white p-3 rounded-xl border border-green-200">
-              <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-green-700 font-bold text-xs">3</span>
+            <div className="flex items-start gap-2 bg-white p-2.5 rounded-lg border border-neutral-200">
+              <div className="w-5 h-5 bg-neutral-200 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-neutral-700 font-bold text-xs">3</span>
               </div>
               <div className="flex-1">
                 <p className="text-sm font-semibold text-neutral-900">Pega el alias</p>
-                <code className="text-xs bg-blue-50 px-2 py-1 rounded font-mono text-blue-700">{wallet}</code>
+                <code className="text-xs bg-neutral-100 px-2 py-1 rounded font-mono text-neutral-700">{wallet}</code>
               </div>
             </div>
 
-            <div className="flex items-start gap-3 bg-white p-3 rounded-xl border border-green-200">
-              <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-green-700 font-bold text-xs">4</span>
+            <div className="flex items-start gap-2 bg-white p-2.5 rounded-lg border border-neutral-200">
+              <div className="w-5 h-5 bg-neutral-200 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-neutral-700 font-bold text-xs">4</span>
               </div>
               <div className="flex-1">
                 <p className="text-sm font-semibold text-neutral-900">Ingresa el monto</p>
-                <span className="text-xs font-bold text-blue-600">{formatCurrency(amount)}</span>
+                <span className="text-xs font-bold text-neutral-700">{formatCurrency(amount)}</span>
               </div>
             </div>
 
-            <div className="flex items-start gap-3 bg-white p-3 rounded-xl border border-green-200">
-              <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-green-700 font-bold text-xs">5</span>
+            <div className="flex items-start gap-2 bg-white p-2.5 rounded-lg border border-neutral-200">
+              <div className="w-5 h-5 bg-neutral-200 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-neutral-700 font-bold text-xs">5</span>
               </div>
               <div className="flex-1">
                 <p className="text-sm font-semibold text-neutral-900">Confirma el pago</p>
@@ -167,27 +165,27 @@ export default function MercadoPagoQR({ wallet, amount, clientName }: MercadoPag
               </div>
             </div>
 
-            <div className="flex items-start gap-3 bg-gradient-to-r from-amber-50 to-orange-50 p-3 rounded-xl border-2 border-amber-300">
-              <div className="w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+            <div className="flex items-start gap-2 bg-yellow-50 p-2.5 rounded-lg border border-yellow-300">
+              <div className="w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                 <span className="text-white font-bold text-xs">6</span>
               </div>
               <div className="flex-1">
-                <p className="text-sm font-bold text-amber-900">¡Importante! Vuelve aquí</p>
-                <p className="text-xs text-amber-800">Usa el botón "Notificar Pago" más abajo</p>
+                <p className="text-sm font-semibold text-yellow-900">¡Importante! Vuelve aquí</p>
+                <p className="text-xs text-yellow-800">Usa el botón "Notificar Pago" más abajo</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Nota de seguridad */}
-        <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 p-4 rounded-2xl">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
-              <span className="text-2xl">🔒</span>
+        <div className="bg-neutral-100 border border-neutral-300 p-3 rounded-lg">
+          <div className="flex items-start gap-2">
+            <div className="w-8 h-8 bg-neutral-700 rounded-lg flex items-center justify-center flex-shrink-0">
+              <span className="text-lg">🔒</span>
             </div>
             <div className="flex-1">
-              <p className="text-sm font-bold text-purple-900 mb-1">Pago 100% seguro</p>
-              <p className="text-xs text-purple-800">
+              <p className="text-sm font-semibold text-neutral-900 mb-1">Pago 100% seguro</p>
+              <p className="text-xs text-neutral-700">
                 Tu pago se procesa directamente en Mercado Pago. Una vez que el administrador confirme tu transferencia, tu saldo se actualizará automáticamente.
               </p>
             </div>
