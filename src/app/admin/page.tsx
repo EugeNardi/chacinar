@@ -751,7 +751,7 @@ export default function AdminDashboard() {
               .eq('id', selectedClient.account.id);
 
             // Crear transacción con saldo antes y después
-            await supabase
+            const { data: newTransaction, error: transactionError } = await supabase
               .from('transactions')
               .insert({
                 account_id: selectedClient.account.id,
@@ -764,7 +764,16 @@ export default function AdminDashboard() {
                 approved_at: new Date().toISOString(),
                 balance_before: balanceBefore,
                 balance_after: newBalance,
-              });
+              })
+              .select();
+
+            if (transactionError) {
+              console.error('Error creando transacción:', transactionError);
+              showToast('Error al crear la transacción: ' + transactionError.message, 'error');
+              return;
+            }
+            
+            console.log('Transacción creada exitosamente:', newTransaction);
 
             // Crear notificación para el cliente (solo si tiene user_id)
             if (selectedClient.id) {
@@ -883,7 +892,7 @@ export default function AdminDashboard() {
               .eq('id', selectedClient.account.id);
 
             // Crear transacción con saldo antes y después (tipo pago porque reduce el saldo)
-            await supabase
+            const { data: newTransaction, error: transactionError } = await supabase
               .from('transactions')
               .insert({
                 account_id: selectedClient.account.id,
@@ -896,7 +905,16 @@ export default function AdminDashboard() {
                 approved_at: new Date().toISOString(),
                 balance_before: balanceBefore,
                 balance_after: newBalance,
-              });
+              })
+              .select();
+
+            if (transactionError) {
+              console.error('Error creando transacción de pago:', transactionError);
+              showToast('Error al crear la transacción: ' + transactionError.message, 'error');
+              return;
+            }
+            
+            console.log('Transacción de pago creada exitosamente:', newTransaction);
 
             // Crear notificación para el cliente
             if (selectedClient.id) {
