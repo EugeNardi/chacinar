@@ -79,12 +79,19 @@ export default function ClienteDashboard() {
         setAccount(accountData);
 
         // Cargar transacciones
-        const { data: transactionsData } = await supabase
+        const { data: transactionsData, error: transactionsError } = await supabase
           .from('transactions')
           .select('*')
           .eq('account_id', accountData.id)
           .eq('status', 'aprobado')
           .order('created_at', { ascending: false });
+
+        console.log('Transacciones cargadas:', transactionsData?.length || 0);
+        console.log('Transacciones:', transactionsData);
+        
+        if (transactionsError) {
+          console.error('Error cargando transacciones:', transactionsError);
+        }
 
         if (transactionsData) {
           setTransactions(transactionsData);
@@ -163,8 +170,8 @@ export default function ClienteDashboard() {
         </Card>
       )}
 
-      {/* Últimas Transacciones */}
-      {transactions.length > 0 && (
+      {/* Historial de Transacciones */}
+      {transactions.length > 0 ? (
         <Card className="bg-gradient-to-br from-brand to-brand-dark text-white">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
             <h2 className="text-lg sm:text-xl font-bold">📋 Historial</h2>
@@ -219,6 +226,16 @@ export default function ClienteDashboard() {
               {showAllTransactions ? '▲ Mostrar menos' : `▼ Ver todas (${transactions.length})`}
             </button>
           )}
+        </Card>
+      ) : (
+        <Card className="bg-neutral-50 border-2 border-dashed border-neutral-300">
+          <div className="text-center py-8">
+            <History className="w-12 h-12 text-neutral-400 mx-auto mb-3" />
+            <h3 className="text-lg font-semibold text-neutral-700 mb-2">Sin transacciones aún</h3>
+            <p className="text-sm text-neutral-600">
+              Aquí aparecerán todas tus boletas (cargos) y pagos realizados.
+            </p>
+          </div>
         </Card>
       )}
 
