@@ -143,20 +143,20 @@ export default function ClienteDashboard() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-8 px-4 sm:px-0">
       {/* Perfil de Usuario */}
       {userProfile && (
         <Card className="bg-gradient-to-r from-brand to-brand-light text-white">
-          <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-              <UserIcon className="w-8 h-8 text-white" />
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+              <UserIcon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
             </div>
-            <div className="flex-1">
-              <h2 className="text-2xl font-bold">{userProfile.full_name}</h2>
-              <p className="text-white/80">{userProfile.email}</p>
-              <div className="flex items-center mt-2 text-sm text-white/70">
-                <Calendar className="w-4 h-4 mr-1" />
-                <span>Cliente desde {formatDate(userProfile.created_at)}</span>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-lg sm:text-2xl font-bold truncate">{userProfile.full_name}</h2>
+              <p className="text-sm sm:text-base text-white/80 truncate">{userProfile.email}</p>
+              <div className="flex items-center mt-1 sm:mt-2 text-xs sm:text-sm text-white/70">
+                <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                <span className="truncate">Cliente desde {formatDate(userProfile.created_at)}</span>
               </div>
             </div>
           </div>
@@ -166,49 +166,47 @@ export default function ClienteDashboard() {
       {/* Últimas Transacciones */}
       {transactions.length > 0 && (
         <Card className="bg-gradient-to-br from-brand to-brand-dark text-white">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold">📋 Historial de Transacciones</h2>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+            <h2 className="text-lg sm:text-xl font-bold">📋 Historial</h2>
             <div className="flex gap-2">
               <button
                 onClick={() => loadData()}
-                className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+                className="text-xs bg-white/20 hover:bg-white/30 px-2 sm:px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
                 title="Refrescar"
               >
                 <RefreshCw className="w-3 h-3" />
-                Refrescar
+                <span className="hidden sm:inline">Refrescar</span>
               </button>
               <button
                 onClick={() => setShowDeleteHistoryConfirm(true)}
-                className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition-colors"
+                className="text-xs bg-white/20 hover:bg-white/30 px-2 sm:px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
               >
-                Eliminar historial
+                Eliminar
               </button>
             </div>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             {(showAllTransactions ? transactions : transactions.slice(0, 4)).map((transaction) => (
-              <div key={transaction.id} className="bg-white/10 backdrop-blur-sm rounded-apple p-4 border border-white/20">
-                <div className="flex justify-between items-start mb-2">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Badge variant={transaction.type === 'cargo' ? 'danger' : 'success'} className="bg-white/20 text-white border-white/30">
-                        {transaction.type === 'cargo' ? 'Cargo' : 'Pago'}
-                      </Badge>
-                      <p className="text-xs text-white/70">
-                        {new Date(transaction.created_at).toLocaleDateString('es-AR', { 
-                          day: '2-digit', 
-                          month: '2-digit', 
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </p>
-                    </div>
-                    <p className="font-bold text-2xl text-white">{formatCurrency(transaction.amount)}</p>
-                    {transaction.description && (
-                      <p className="text-sm text-white/90 mt-1">{transaction.description}</p>
-                    )}
+              <div key={transaction.id} className="bg-white/10 backdrop-blur-sm rounded-lg p-3 sm:p-4 border border-white/20">
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <Badge variant={transaction.type === 'cargo' ? 'danger' : 'success'} className="bg-white/20 text-white border-white/30 text-xs">
+                      {transaction.type === 'cargo' ? 'Cargo' : 'Pago'}
+                    </Badge>
+                    <p className="text-[10px] sm:text-xs text-white/70">
+                      {new Date(transaction.created_at).toLocaleDateString('es-AR', { 
+                        day: '2-digit', 
+                        month: '2-digit', 
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
                   </div>
+                  <p className="font-bold text-xl sm:text-2xl text-white">{formatCurrency(transaction.amount)}</p>
+                  {transaction.description && (
+                    <p className="text-xs sm:text-sm text-white/90">{transaction.description}</p>
+                  )}
                 </div>
               </div>
             ))}
@@ -216,7 +214,7 @@ export default function ClienteDashboard() {
           {transactions.length > 4 && (
             <button
               onClick={() => setShowAllTransactions(!showAllTransactions)}
-              className="w-full mt-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors text-sm font-medium"
+              className="w-full mt-3 sm:mt-4 py-2.5 bg-white/20 hover:bg-white/30 rounded-lg transition-colors text-sm font-medium"
             >
               {showAllTransactions ? '▲ Mostrar menos' : `▼ Ver todas (${transactions.length})`}
             </button>
@@ -225,36 +223,36 @@ export default function ClienteDashboard() {
       )}
 
       {/* Balance y Pago */}
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         {/* Balance Card */}
         <Card>
-          <div className="text-center py-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-100 rounded-apple mb-4">
-              <DollarSign className="w-8 h-8 text-primary-600" />
+          <div className="text-center py-6 sm:py-8">
+            <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-primary-100 rounded-lg mb-3 sm:mb-4">
+              <DollarSign className="w-6 h-6 sm:w-8 sm:h-8 text-primary-600" />
             </div>
-            <h2 className="text-lg text-neutral-600 mb-2">Tu saldo actual</h2>
-            <p className="text-5xl font-bold text-neutral-900 mb-6">
+            <h2 className="text-base sm:text-lg text-neutral-600 mb-2">Tu saldo actual</h2>
+            <p className="text-3xl sm:text-4xl md:text-5xl font-bold text-neutral-900 mb-4 sm:mb-6 break-words px-2">
               {formatCurrency(account?.balance || 0)}
             </p>
-            <p className="text-sm text-neutral-600 mb-6">
+            <p className="text-xs sm:text-sm text-neutral-600 mb-4 sm:mb-6">
               {(account?.balance || 0) > 0 ? 'Debes pagar este monto' : 'Estás al día'}
             </p>
             
             {/* Botón destacado para notificar pago */}
             {(account?.balance || 0) > 0 && (
-              <div className="mb-4">
+              <div className="mb-4 px-2">
                 <Button
                   variant="primary"
                   onClick={() => {
                     setRequestType('pago');
                     setShowRequestForm(true);
                   }}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 text-sm sm:text-base"
                 >
-                  <Clock className="w-5 h-5 mr-2" />
+                  <Clock className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                   💰 Notificar Pago Realizado
                 </Button>
-                <p className="text-xs text-neutral-500 mt-2">
+                <p className="text-[10px] sm:text-xs text-neutral-500 mt-2">
                   Solicita el descuento de tu saldo después de realizar el pago
                 </p>
               </div>
@@ -263,9 +261,9 @@ export default function ClienteDashboard() {
             <Button
               variant="outline"
               onClick={() => setShowRequestForm(!showRequestForm)}
-              className="inline-flex items-center"
+              className="inline-flex items-center text-sm sm:text-base"
             >
-              <Plus className="w-5 h-5 mr-2" />
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
               Otra solicitud
             </Button>
           </div>
@@ -274,7 +272,7 @@ export default function ClienteDashboard() {
         {/* Opciones de Pago */}
         {account && (account.balance || 0) > 0 && (
           <Card>
-            <h3 className="text-xl font-bold text-neutral-900 mb-4">💳 Opciones de Pago</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-neutral-900 mb-4">💳 Opciones de Pago</h3>
             
             {/* QR de Mercado Pago */}
             {account.mercadopago_wallet && (
@@ -289,8 +287,8 @@ export default function ClienteDashboard() {
 
             {/* Botones de WhatsApp */}
             <div className="space-y-3">
-              <p className="text-sm font-medium text-neutral-700 mb-3">
-                📱 Enviar comprobante de pago por WhatsApp:
+              <p className="text-xs sm:text-sm font-medium text-neutral-700 mb-3">
+                📱 Enviar comprobante por WhatsApp:
               </p>
               
               <a
