@@ -58,13 +58,13 @@ export default function MercadoPagoQR({ wallet, amount, clientName }: MercadoPag
         {/* Alias de Mercado Pago */}
         <div className="bg-neutral-50 p-4 rounded-lg border border-neutral-200">
           <p className="text-sm font-semibold text-neutral-700 mb-3">Alias de Mercado Pago</p>
-          <div className="flex items-center gap-3 bg-white p-4 rounded-lg border-2 border-blue-300">
-            <div className="flex-1 text-center">
-              <code className="text-2xl font-mono font-bold text-blue-700 block">{wallet}</code>
+          <div className="bg-white p-4 rounded-lg border-2 border-blue-300">
+            <div className="text-center mb-3">
+              <code className="text-xl sm:text-2xl font-mono font-bold text-blue-700 break-all">{wallet}</code>
             </div>
             <button
               onClick={handleCopyAlias}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all flex items-center gap-2 font-medium shadow-md"
+              className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all flex items-center justify-center gap-2 font-medium shadow-md"
               title="Copiar alias"
             >
               {copiedAlias ? (

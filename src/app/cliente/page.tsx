@@ -187,19 +187,29 @@ export default function ClienteDashboard() {
           </div>
           <div className="space-y-3">
             {(showAllTransactions ? transactions : transactions.slice(0, 4)).map((transaction) => (
-              <div key={transaction.id} className="bg-white/10 backdrop-blur-sm rounded-apple p-4">
+              <div key={transaction.id} className="bg-white/10 backdrop-blur-sm rounded-apple p-4 border border-white/20">
                 <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <p className="font-semibold text-lg">{formatCurrency(transaction.amount)}</p>
-                    <p className="text-sm text-white/80">{formatDate(transaction.created_at)}</p>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Badge variant={transaction.type === 'cargo' ? 'danger' : 'success'} className="bg-white/20 text-white border-white/30">
+                        {transaction.type === 'cargo' ? 'Cargo' : 'Pago'}
+                      </Badge>
+                      <p className="text-xs text-white/70">
+                        {new Date(transaction.created_at).toLocaleDateString('es-AR', { 
+                          day: '2-digit', 
+                          month: '2-digit', 
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
+                    <p className="font-bold text-2xl text-white">{formatCurrency(transaction.amount)}</p>
+                    {transaction.description && (
+                      <p className="text-sm text-white/90 mt-1">{transaction.description}</p>
+                    )}
                   </div>
-                  <Badge variant={transaction.type === 'cargo' ? 'danger' : 'success'} className="bg-white/20 text-white border-white/30">
-                    {transaction.type === 'cargo' ? 'Cargo' : 'Pago'}
-                  </Badge>
                 </div>
-                {transaction.description && (
-                  <p className="text-sm text-white/90">{transaction.description}</p>
-                )}
               </div>
             ))}
           </div>
