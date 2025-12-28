@@ -14,6 +14,7 @@ import { generateBillPDF } from '@/lib/pdfGenerator';
 import { generateReceipt } from '@/lib/receiptGenerator';
 import { useToast } from '@/hooks/useToast';
 import MonthlyHistory from '@/components/MonthlyHistory';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 export default function AdminDashboard() {
   const [clients, setClients] = useState<(User & { account: Account })[]>([]);
@@ -38,6 +39,9 @@ export default function AdminDashboard() {
   const [newClientName, setNewClientName] = useState('');
   const [newClientEmail, setNewClientEmail] = useState('');
   const [showPaymentConfigModal, setShowPaymentConfigModal] = useState(false);
+  const [showDeleteClientConfirm, setShowDeleteClientConfirm] = useState(false);
+  const [showDeleteHistoryConfirm, setShowDeleteHistoryConfirm] = useState(false);
+  const [clientToDelete, setClientToDelete] = useState<(User & { account: Account }) | null>(null);
   const [mpAlias, setMpAlias] = useState('');
   const [bankName, setBankName] = useState('');
   const [bankAccount, setBankAccount] = useState('');
@@ -690,34 +694,19 @@ export default function AdminDashboard() {
                       <FileText className="w-4 h-4" />
                     </Button>
                   </div>
-                  <div className="mt-2">
-                    <Button
-                      size="sm"
-                      variant="danger"
-                      onClick={async (e) => {
+                  <div className="mt-2 flex justify-end">
+                    <button
+                      onClick={(e) => {
                         e.stopPropagation();
-                        if (confirm(`¿Estás seguro de que quieres eliminar a ${client.full_name}? Esta acción no se puede deshacer.`)) {
-                          try {
-                            // Eliminar cuenta asociada
-                            if (client.account?.id) {
-                              await supabase.from('accounts').delete().eq('id', client.account.id);
-                            }
-                            // Eliminar usuario
-                            await supabase.from('users').delete().eq('id', client.id);
-                            showToast('Cliente eliminado exitosamente', 'success');
-                            loadData();
-                          } catch (error) {
-                            console.error('Error eliminando cliente:', error);
-                            showToast('Error al eliminar cliente', 'error');
-                          }
-                        }
+                        setClientToDelete(client);
+                        setShowDeleteClientConfirm(true);
                       }}
-                      className="w-full bg-red-600 hover:bg-red-700"
+                      className="text-xs text-neutral-500 hover:text-red-600 transition-colors flex items-center gap-1"
                       title="Eliminar cliente"
                     >
-                      <Trash2 className="w-4 h-4 mr-1" />
-                      Eliminar Cliente
-                    </Button>
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Eliminar
+                    </button>
                   </div>
                 </div>
               </div>
@@ -1299,21 +1288,7 @@ export default function AdminDashboard() {
               <Button
                 size="sm"
                 variant="danger"
-                onClick={async () => {
-                  if (confirm(`¿Estás seguro de que quieres eliminar todo el historial de ${selectedClient?.full_name}? Esta acción no se puede deshacer.`)) {
-                    try {
-                      await supabase
-                        .from('transactions')
-                        .delete()
-                        .eq('account_id', selectedClient?.account.id);
-                      setClientHistory([]);
-                      showToast('Historial eliminado exitosamente', 'success');
-                    } catch (error) {
-                      console.error('Error eliminando historial:', error);
-                      showToast('Error al eliminar historial', 'error');
-                    }
-                  }
-                }}
+                onClick={() => setShowDeleteHistoryConfirm(true)}
                 className="bg-red-600 hover:bg-red-700"
               >
                 <Trash2 className="w-4 h-4 mr-1" />
@@ -1668,6 +1643,70 @@ export default function AdminDashboard() {
 
       {/* Toast Container */}
       <ToastContainer />
+
+      {/* Confirm Dialogs */}
+      <ConfirmDialog
+        isOpen={showDeleteClientConfirm}
+        onClose={() => {
+          setShowDeleteClientConfirm(false);
+          setClientToDelete(null);
+        }}
+        onConfirm={async () => {
+          if (clientToDelete) {
+            try {
+              // Eliminar cuenta asociada
+              if (clientToDelete.account?.id) {
+                await supabase.from('accounts').delete().eq('id', clientToDelete.account.id);
+              }
+              // Eliminar usuario
+              await supabase.from('users').delete().eq('id', clientToDelete.id);
+              showToast('Cliente eliminado exitosamente', 'success');
+              loadData();
+            } catch (error) {
+              console.error('Error eliminando cliente:', error);
+              showToast('Error al eliminar cliente', 'error');
+            }
+          }
+        }}
+        title="Eliminar cliente"
+        message={
+          <div>
+            <p>¿Estás seguro de que quieres eliminar a <strong>{clientToDelete?.full_name}</strong>?</p>
+            <p className="mt-2 text-sm">Esta acción no se puede deshacer y eliminará:</p>
+            <ul className="list-disc list-inside text-sm mt-1 ml-2">
+              <li>El usuario y su cuenta</li>
+              <li>Todo su historial de transacciones</li>
+              <li>Todas sus notas y configuraciones</li>
+            </ul>
+          </div>
+        }
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="danger"
+      />
+
+      <ConfirmDialog
+        isOpen={showDeleteHistoryConfirm}
+        onClose={() => setShowDeleteHistoryConfirm(false)}
+        onConfirm={async () => {
+          try {
+            await supabase
+              .from('transactions')
+              .delete()
+              .eq('account_id', selectedClient?.account.id);
+            setClientHistory([]);
+            showToast('Historial eliminado exitosamente', 'success');
+          } catch (error) {
+            console.error('Error eliminando historial:', error);
+            showToast('Error al eliminar historial', 'error');
+          }
+        }}
+        title="Eliminar historial"
+        message={`¿Estás seguro de que quieres eliminar todo el historial de ${selectedClient?.full_name}? Esta acción no se puede deshacer.`}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="danger"
+      />
     </div>
   );
 }

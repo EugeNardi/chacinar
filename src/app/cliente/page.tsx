@@ -11,6 +11,7 @@ import { Account, Transaction, ModificationRequest } from '@/types';
 import { DollarSign, Plus, History, Clock, User as UserIcon, Calendar, Wallet, MessageCircle, Send } from 'lucide-react';
 import MercadoPagoQR from '@/components/MercadoPagoQR';
 import MonthlyHistory from '@/components/MonthlyHistory';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 export default function ClienteDashboard() {
   const [account, setAccount] = useState<Account | null>(null);
@@ -20,6 +21,7 @@ export default function ClienteDashboard() {
   const [showAllTransactions, setShowAllTransactions] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showRequestForm, setShowRequestForm] = useState(false);
+  const [showDeleteHistoryConfirm, setShowDeleteHistoryConfirm] = useState(false);
   
   // Form state
   const [requestType, setRequestType] = useState<'cargo' | 'pago'>('pago');
@@ -148,19 +150,7 @@ export default function ClienteDashboard() {
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">📋 Historial de Transacciones</h2>
             <button
-              onClick={async () => {
-                if (confirm('¿Estás seguro de que quieres eliminar todo el historial? Esta acción no se puede deshacer.')) {
-                  try {
-                    await supabase
-                      .from('transactions')
-                      .delete()
-                      .eq('account_id', account?.id);
-                    setTransactions([]);
-                  } catch (error) {
-                    console.error('Error eliminando historial:', error);
-                  }
-                }
-              }}
+              onClick={() => setShowDeleteHistoryConfirm(true)}
               className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition-colors"
             >
               Eliminar historial
@@ -461,6 +451,28 @@ export default function ClienteDashboard() {
         </p>
         <MonthlyHistory transactions={transactions} />
       </div>
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={showDeleteHistoryConfirm}
+        onClose={() => setShowDeleteHistoryConfirm(false)}
+        onConfirm={async () => {
+          try {
+            await supabase
+              .from('transactions')
+              .delete()
+              .eq('account_id', account?.id);
+            setTransactions([]);
+          } catch (error) {
+            console.error('Error eliminando historial:', error);
+          }
+        }}
+        title="Eliminar historial"
+        message="¿Estás seguro de que quieres eliminar todo el historial? Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="danger"
+      />
     </div>
   );
 }
