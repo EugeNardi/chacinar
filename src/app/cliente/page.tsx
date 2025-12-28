@@ -8,7 +8,7 @@ import Input from '@/components/ui/Input';
 import Badge from '@/components/ui/Badge';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Account, Transaction, ModificationRequest } from '@/types';
-import { DollarSign, Plus, History, Clock, User as UserIcon, Calendar, Wallet, MessageCircle, Send } from 'lucide-react';
+import { DollarSign, Plus, History, Clock, User as UserIcon, Calendar, Wallet, MessageCircle, Send, RefreshCw } from 'lucide-react';
 import MercadoPagoQR from '@/components/MercadoPagoQR';
 import MonthlyHistory from '@/components/MonthlyHistory';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
@@ -30,6 +30,25 @@ export default function ClienteDashboard() {
 
   useEffect(() => {
     loadData();
+
+    // Recargar datos cuando el usuario vuelve a la pestaña
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        loadData();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Recargar datos cada 30 segundos
+    const interval = setInterval(() => {
+      loadData();
+    }, 30000);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearInterval(interval);
+    };
   }, []);
 
   async function loadData() {
@@ -149,12 +168,22 @@ export default function ClienteDashboard() {
         <Card className="bg-gradient-to-br from-brand to-brand-dark text-white">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">📋 Historial de Transacciones</h2>
-            <button
-              onClick={() => setShowDeleteHistoryConfirm(true)}
-              className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition-colors"
-            >
-              Eliminar historial
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => loadData()}
+                className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+                title="Refrescar"
+              >
+                <RefreshCw className="w-3 h-3" />
+                Refrescar
+              </button>
+              <button
+                onClick={() => setShowDeleteHistoryConfirm(true)}
+                className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition-colors"
+              >
+                Eliminar historial
+              </button>
+            </div>
           </div>
           <div className="space-y-3">
             {(showAllTransactions ? transactions : transactions.slice(0, 4)).map((transaction) => (
