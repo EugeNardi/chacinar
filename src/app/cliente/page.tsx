@@ -207,26 +207,49 @@ export default function ClienteDashboard() {
           </div>
           <div className="space-y-2 sm:space-y-3">
             {(showAllTransactions ? transactions : transactions.slice(0, 4)).map((transaction) => (
-              <div key={transaction.id} className="bg-white/10 backdrop-blur-sm rounded-lg p-3 sm:p-4 border border-white/20">
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <Badge variant={transaction.type === 'cargo' ? 'danger' : 'success'} className="bg-white/20 text-white border-white/30 text-xs">
-                      {transaction.type === 'cargo' ? 'Cargo' : 'Pago'}
-                    </Badge>
-                    <p className="text-[10px] sm:text-xs text-white/70">
+              <div 
+                key={transaction.id} 
+                className={`backdrop-blur-sm rounded-lg p-3 sm:p-4 border-2 ${
+                  transaction.type === 'cargo' 
+                    ? 'bg-red-500/20 border-red-300/40' 
+                    : 'bg-green-500/20 border-green-300/40'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  {/* Lado izquierdo: Tipo y monto */}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge 
+                        variant={transaction.type === 'cargo' ? 'danger' : 'success'} 
+                        className="bg-white/30 text-white border-white/40 text-xs font-semibold"
+                      >
+                        {transaction.type === 'cargo' ? '📕 Cargo' : '💰 Pago'}
+                      </Badge>
+                    </div>
+                    <p className="font-bold text-2xl sm:text-3xl text-white mb-1">
+                      {transaction.type === 'cargo' ? '+' : '-'}{formatCurrency(transaction.amount)}
+                    </p>
+                    {transaction.description && (
+                      <p className="text-xs sm:text-sm text-white/90 mt-2">{transaction.description}</p>
+                    )}
+                  </div>
+                  
+                  {/* Lado derecho: Fecha y hora */}
+                  <div className="text-right">
+                    <p className="text-[10px] sm:text-xs text-white/80 font-medium">
                       {new Date(transaction.created_at).toLocaleDateString('es-AR', { 
                         day: '2-digit', 
                         month: '2-digit', 
-                        year: 'numeric',
+                        year: 'numeric'
+                      })}
+                    </p>
+                    <p className="text-[10px] sm:text-xs text-white/70">
+                      {new Date(transaction.created_at).toLocaleTimeString('es-AR', { 
                         hour: '2-digit',
                         minute: '2-digit'
                       })}
                     </p>
                   </div>
-                  <p className="font-bold text-xl sm:text-2xl text-white">{formatCurrency(transaction.amount)}</p>
-                  {transaction.description && (
-                    <p className="text-xs sm:text-sm text-white/90">{transaction.description}</p>
-                  )}
                 </div>
               </div>
             ))}

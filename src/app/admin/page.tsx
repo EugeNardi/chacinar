@@ -1270,6 +1270,7 @@ export default function AdminDashboard() {
         isOpen={showHistoryModal}
         onClose={() => setShowHistoryModal(false)}
         title={`Historial de ${selectedClient?.full_name || 'Cliente'}`}
+        size="xl"
       >
         <div className="space-y-4">
           {/* Resumen */}
