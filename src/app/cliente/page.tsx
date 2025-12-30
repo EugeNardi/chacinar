@@ -327,16 +327,14 @@ export default function ClienteDashboard() {
           <Card>
             <h3 className="text-lg sm:text-xl font-bold text-neutral-900 mb-4">💳 Opciones de Pago</h3>
             
-            {/* QR de Mercado Pago */}
-            {account.mercadopago_wallet && (
-              <div className="mb-6">
-                <MercadoPagoQR
-                  wallet={account.mercadopago_wallet}
-                  amount={account.balance || 0}
-                  clientName={userProfile?.full_name || ''}
-                />
-              </div>
-            )}
+            {/* Mercado Pago */}
+            <div className="mb-6">
+              <MercadoPagoQR
+                wallet="sebastiannardi.mp"
+                amount={account.balance || 0}
+                clientName={userProfile?.full_name || ''}
+              />
+            </div>
 
             {/* Botones de WhatsApp */}
             <div className="space-y-3">
