@@ -328,12 +328,30 @@ export default function ClienteDashboard() {
             <h3 className="text-lg sm:text-xl font-bold text-neutral-900 mb-4">💳 Opciones de Pago</h3>
             
             {/* Mercado Pago */}
-            <div className="mb-6">
+            <div className="mb-4">
               <MercadoPagoQR
                 wallet="sebastiannardi.mp"
                 amount={account.balance || 0}
                 clientName={userProfile?.full_name || ''}
               />
+            </div>
+
+            {/* Botón Notificar Pago - Destacado */}
+            <div className="mb-6">
+              <Button
+                variant="primary"
+                onClick={() => {
+                  setRequestType('pago');
+                  setShowRequestForm(true);
+                }}
+                className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 text-base sm:text-lg shadow-lg"
+              >
+                <Clock className="w-5 h-5 mr-2" />
+                💰 Notificar Pago Realizado
+              </Button>
+              <p className="text-xs text-center text-neutral-600 mt-2">
+                Haz clic aquí después de realizar el pago en Mercado Pago
+              </p>
             </div>
 
             {/* Botones de WhatsApp */}
@@ -382,22 +400,6 @@ export default function ClienteDashboard() {
                 <Send className="w-5 h-5 text-green-600" />
               </a>
 
-              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-apple">
-                <p className="text-xs text-blue-800 mb-3">
-                  💡 <strong>Importante:</strong> Después de enviar el comprobante, notifica el pago para que el administrador lo apruebe.
-                </p>
-                <Button
-                  variant="primary"
-                  onClick={() => {
-                    setRequestType('pago');
-                    setShowRequestForm(true);
-                  }}
-                  className="w-full bg-blue-600 hover:bg-blue-700"
-                >
-                  <Clock className="w-4 h-4 mr-2" />
-                  Notificar Pago Realizado
-                </Button>
-              </div>
             </div>
           </Card>
         )}

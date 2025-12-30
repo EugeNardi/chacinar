@@ -75,28 +75,11 @@ export default function MercadoPagoQR({ wallet, amount, clientName }: MercadoPag
         <div className="space-y-4">
 
         {/* Monto a pagar */}
-        <div className="bg-blue-50 p-5 rounded-lg border border-blue-200">
-          <p className="text-sm text-blue-700 mb-2 font-medium text-center">Monto a pagar</p>
-          <p className="text-4xl font-bold text-blue-900 text-center mb-3">
+        <div className="bg-blue-50 p-6 rounded-lg border border-blue-200 text-center">
+          <p className="text-sm text-blue-700 mb-3 font-medium">Monto a pagar</p>
+          <p className="text-4xl sm:text-5xl font-bold text-blue-900">
             {formatCurrency(amount)}
           </p>
-          <button
-            onClick={handleCopyAmount}
-            className="w-full px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-all flex items-center justify-center gap-2 text-sm font-medium"
-            title="Copiar monto"
-          >
-            {copiedAmount ? (
-              <>
-                <Check className="w-4 h-4" />
-                <span>¡Copiado!</span>
-              </>
-            ) : (
-              <>
-                <Copy className="w-4 h-4" />
-                <span>Copiar monto</span>
-              </>
-            )}
-          </button>
         </div>
 
         {/* Botón principal para abrir Mercado Pago */}
@@ -119,9 +102,9 @@ export default function MercadoPagoQR({ wallet, amount, clientName }: MercadoPag
 
         {/* Alias de Mercado Pago */}
         <div className="bg-neutral-50 p-4 rounded-lg border border-neutral-200">
-          <p className="text-sm font-semibold text-neutral-700 mb-3">O copia el alias manualmente</p>
-          <div className="bg-white p-4 rounded-lg border-2 border-blue-300">
-            <div className="text-center mb-3">
+          <p className="text-sm font-semibold text-neutral-700 mb-3 text-center">O copia el alias manualmente</p>
+          <div className="bg-white p-5 rounded-lg border-2 border-blue-300">
+            <div className="text-center mb-4">
               <code className="text-xl sm:text-2xl font-mono font-bold text-blue-700 break-all">{wallet}</code>
             </div>
             <button
@@ -144,7 +127,7 @@ export default function MercadoPagoQR({ wallet, amount, clientName }: MercadoPag
           </div>
         </div>
 
-        {/* Instrucciones paso a paso */}
+        {/* Instrucciones paso a paso - Solo 3 pasos */}
         <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-5 rounded-xl border-2 border-green-300">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center shadow-md">
@@ -153,33 +136,13 @@ export default function MercadoPagoQR({ wallet, amount, clientName }: MercadoPag
             <p className="font-bold text-lg text-green-900">Pasos para pagar</p>
           </div>
           
-          <div className="space-y-2.5">
-            <div className="bg-white p-4 rounded-lg border-2 border-green-200 shadow-sm">
-              <div className="flex items-start gap-3">
-                <div className="w-7 h-7 bg-green-600 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">1</div>
-                <div className="flex-1">
-                  <p className="text-sm font-bold text-neutral-900 mb-1">Haz clic en "Abrir Mercado Pago"</p>
-                  <p className="text-xs text-neutral-600">El botón azul de arriba abrirá la app automáticamente</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white p-4 rounded-lg border-2 border-green-200 shadow-sm">
-              <div className="flex items-start gap-3">
-                <div className="w-7 h-7 bg-green-600 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">2</div>
-                <div className="flex-1">
-                  <p className="text-sm font-bold text-neutral-900 mb-1">Toca "Transferir" en Mercado Pago</p>
-                  <p className="text-xs text-neutral-600">Busca la opción de transferir dinero</p>
-                </div>
-              </div>
-            </div>
-
+          <div className="space-y-3">
             <div className="bg-white p-4 rounded-lg border-2 border-blue-300 shadow-sm">
               <div className="flex items-start gap-3">
-                <div className="w-7 h-7 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">3</div>
+                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold">1</div>
                 <div className="flex-1">
                   <p className="text-sm font-bold text-neutral-900 mb-2">Pega el alias (ya está copiado)</p>
-                  <div className="bg-blue-50 px-3 py-2 rounded-lg border border-blue-200">
+                  <div className="bg-blue-50 px-3 py-2.5 rounded-lg border border-blue-200 text-center">
                     <code className="text-base font-mono font-bold text-blue-700">{wallet}</code>
                   </div>
                 </div>
@@ -188,10 +151,10 @@ export default function MercadoPagoQR({ wallet, amount, clientName }: MercadoPag
 
             <div className="bg-white p-4 rounded-lg border-2 border-blue-300 shadow-sm">
               <div className="flex items-start gap-3">
-                <div className="w-7 h-7 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">4</div>
+                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold">2</div>
                 <div className="flex-1">
                   <p className="text-sm font-bold text-neutral-900 mb-2">Ingresa el monto exacto</p>
-                  <div className="bg-blue-50 px-3 py-2 rounded-lg border border-blue-200">
+                  <div className="bg-blue-50 px-3 py-2.5 rounded-lg border border-blue-200 text-center">
                     <span className="text-lg font-bold text-blue-700">{formatCurrency(amount)}</span>
                   </div>
                 </div>
@@ -200,10 +163,10 @@ export default function MercadoPagoQR({ wallet, amount, clientName }: MercadoPag
 
             <div className="bg-white p-4 rounded-lg border-2 border-green-200 shadow-sm">
               <div className="flex items-start gap-3">
-                <div className="w-7 h-7 bg-green-600 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">5</div>
+                <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold">3</div>
                 <div className="flex-1">
                   <p className="text-sm font-bold text-neutral-900 mb-1">Confirma el pago</p>
-                  <p className="text-xs text-neutral-600">Verifica que todo esté correcto antes de confirmar</p>
+                  <p className="text-xs text-neutral-600">Verifica que todo esté correcto</p>
                 </div>
               </div>
             </div>
