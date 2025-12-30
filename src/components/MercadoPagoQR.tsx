@@ -2,7 +2,7 @@
 
 import { formatCurrency } from '@/lib/utils';
 import Card from './ui/Card';
-import { Wallet, Copy, Check, Upload } from 'lucide-react';
+import { Wallet, Copy, Check, Upload, ExternalLink } from 'lucide-react';
 import { useState } from 'react';
 
 interface MercadoPagoQRProps {
@@ -13,11 +13,36 @@ interface MercadoPagoQRProps {
 
 export default function MercadoPagoQR({ wallet, amount, clientName }: MercadoPagoQRProps) {
   const [copiedAlias, setCopiedAlias] = useState(false);
+  const [copiedAmount, setCopiedAmount] = useState(false);
 
   const handleCopyAlias = () => {
     navigator.clipboard.writeText(wallet);
     setCopiedAlias(true);
     setTimeout(() => setCopiedAlias(false), 2000);
+  };
+
+  const handleCopyAmount = () => {
+    navigator.clipboard.writeText(amount.toString());
+    setCopiedAmount(true);
+    setTimeout(() => setCopiedAmount(false), 2000);
+  };
+
+  const handleOpenMercadoPago = () => {
+    // Intentar abrir la app de Mercado Pago
+    // Si no funciona, abre el sitio web
+    const mpAppUrl = `mercadopago://`;
+    const mpWebUrl = `https://www.mercadopago.com.ar/`;
+    
+    // Copiar el alias al portapapeles para facilitar el pago
+    navigator.clipboard.writeText(wallet);
+    
+    // Intentar abrir la app
+    window.location.href = mpAppUrl;
+    
+    // Fallback al sitio web después de 1 segundo si la app no se abre
+    setTimeout(() => {
+      window.open(mpWebUrl, '_blank');
+    }, 1000);
   };
 
   if (!wallet) {
@@ -48,16 +73,47 @@ export default function MercadoPagoQR({ wallet, amount, clientName }: MercadoPag
         </div>
 
         {/* Monto a pagar */}
-        <div className="bg-blue-50 p-5 rounded-lg border border-blue-200 text-center">
-          <p className="text-sm text-blue-700 mb-2 font-medium">Monto a pagar</p>
-          <p className="text-4xl font-bold text-blue-900">
+        <div className="bg-blue-50 p-5 rounded-lg border border-blue-200">
+          <p className="text-sm text-blue-700 mb-2 font-medium text-center">Monto a pagar</p>
+          <p className="text-4xl font-bold text-blue-900 text-center mb-3">
             {formatCurrency(amount)}
           </p>
+          <button
+            onClick={handleCopyAmount}
+            className="w-full px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-all flex items-center justify-center gap-2 text-sm font-medium"
+            title="Copiar monto"
+          >
+            {copiedAmount ? (
+              <>
+                <Check className="w-4 h-4" />
+                <span>¡Copiado!</span>
+              </>
+            ) : (
+              <>
+                <Copy className="w-4 h-4" />
+                <span>Copiar monto</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Botón principal para abrir Mercado Pago */}
+        <button
+          onClick={handleOpenMercadoPago}
+          className="w-full px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl transition-all flex items-center justify-center gap-3 font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+        >
+          <Wallet className="w-6 h-6" />
+          <span>Abrir Mercado Pago</span>
+          <ExternalLink className="w-5 h-5" />
+        </button>
+
+        <div className="text-center">
+          <p className="text-xs text-neutral-500">El alias se copiará automáticamente</p>
         </div>
 
         {/* Alias de Mercado Pago */}
         <div className="bg-neutral-50 p-4 rounded-lg border border-neutral-200">
-          <p className="text-sm font-semibold text-neutral-700 mb-3">Alias de Mercado Pago</p>
+          <p className="text-sm font-semibold text-neutral-700 mb-3">O copia el alias manualmente</p>
           <div className="bg-white p-4 rounded-lg border-2 border-blue-300">
             <div className="text-center mb-3">
               <code className="text-xl sm:text-2xl font-mono font-bold text-blue-700 break-all">{wallet}</code>
@@ -75,7 +131,7 @@ export default function MercadoPagoQR({ wallet, amount, clientName }: MercadoPag
               ) : (
                 <>
                   <Copy className="w-4 h-4" />
-                  <span>Copiar</span>
+                  <span>Copiar alias</span>
                 </>
               )}
             </button>
