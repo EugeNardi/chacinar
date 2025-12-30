@@ -138,37 +138,31 @@ export default function MercadoPagoQR({ wallet, amount, clientName }: MercadoPag
           
           <div className="space-y-3">
             <div className="bg-white p-4 rounded-lg border-2 border-blue-300 shadow-sm">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold">1</div>
-                <div className="flex-1">
-                  <p className="text-sm font-bold text-neutral-900 mb-2">Pega el alias (ya está copiado)</p>
-                  <div className="bg-blue-50 px-3 py-2.5 rounded-lg border border-blue-200 text-center">
-                    <code className="text-base font-mono font-bold text-blue-700">{wallet}</code>
-                  </div>
-                </div>
+              <div className="flex items-center justify-center mb-2">
+                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">1</div>
+              </div>
+              <p className="text-sm font-bold text-neutral-900 mb-3 text-center">Pega el alias (ya está copiado)</p>
+              <div className="bg-blue-50 px-4 py-3 rounded-lg border border-blue-200">
+                <code className="text-base sm:text-lg font-mono font-bold text-blue-700 block text-center">{wallet}</code>
               </div>
             </div>
 
             <div className="bg-white p-4 rounded-lg border-2 border-blue-300 shadow-sm">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold">2</div>
-                <div className="flex-1">
-                  <p className="text-sm font-bold text-neutral-900 mb-2">Ingresa el monto exacto</p>
-                  <div className="bg-blue-50 px-3 py-2.5 rounded-lg border border-blue-200 text-center">
-                    <span className="text-lg font-bold text-blue-700">{formatCurrency(amount)}</span>
-                  </div>
-                </div>
+              <div className="flex items-center justify-center mb-2">
+                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">2</div>
+              </div>
+              <p className="text-sm font-bold text-neutral-900 mb-3 text-center">Ingresa el monto exacto</p>
+              <div className="bg-blue-50 px-4 py-3 rounded-lg border border-blue-200">
+                <span className="text-lg sm:text-xl font-bold text-blue-700 block text-center">{formatCurrency(amount)}</span>
               </div>
             </div>
 
             <div className="bg-white p-4 rounded-lg border-2 border-green-200 shadow-sm">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold">3</div>
-                <div className="flex-1">
-                  <p className="text-sm font-bold text-neutral-900 mb-1">Confirma el pago</p>
-                  <p className="text-xs text-neutral-600">Verifica que todo esté correcto</p>
-                </div>
+              <div className="flex items-center justify-center mb-2">
+                <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-bold">3</div>
               </div>
+              <p className="text-sm font-bold text-neutral-900 mb-1 text-center">Confirma el pago</p>
+              <p className="text-xs text-neutral-600 text-center">Verifica que todo esté correcto</p>
             </div>
           </div>
         </div>
