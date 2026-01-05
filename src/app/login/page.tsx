@@ -32,11 +32,17 @@ export default function LoginPage() {
         // Obtener rol del usuario
         const { data: userData, error: userError } = await supabase
           .from('users')
-          .select('role')
+          .select('role, approved')
           .eq('id', data.user.id)
           .single();
 
         if (userError) throw userError;
+
+        // Verificar si el administrador está aprobado
+        if (userData.role === 'admin' && !userData.approved) {
+          await supabase.auth.signOut();
+          throw new Error('Tu cuenta de administrador aún no ha sido aprobada. Por favor, espera a que un administrador existente apruebe tu solicitud.');
+        }
 
         if (userData.role === 'admin') {
           router.push('/admin');

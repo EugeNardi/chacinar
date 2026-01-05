@@ -30,7 +30,7 @@ export default function AdminLayout({
 
     const { data: user, error: userError } = await supabase
       .from('users')
-      .select('role, full_name')
+      .select('role, full_name, approved')
       .eq('id', session.user.id)
       .single();
 
@@ -53,6 +53,13 @@ export default function AdminLayout({
     if (user.role !== 'admin') {
       console.warn('Acceso denegado: El usuario no es administrador. Rol:', user.role);
       router.push('/cliente');
+      return;
+    }
+
+    if (!user.approved) {
+      console.warn('Acceso denegado: Administrador no aprobado');
+      await supabase.auth.signOut();
+      router.push('/auth');
       return;
     }
 

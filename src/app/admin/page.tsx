@@ -7,7 +7,7 @@ import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { User, Account, ModificationRequest } from '@/types';
-import { Users, DollarSign, Clock, CheckCircle, Search, Plus, Wallet, Settings, FileText, History, UserPlus, Trash2 } from 'lucide-react';
+import { Users, DollarSign, Clock, CheckCircle, Search, Plus, Wallet, Settings, FileText, History, UserPlus, Trash2, Shield, XCircle } from 'lucide-react';
 import Input from '@/components/ui/Input';
 import Modal from '@/components/ui/Modal';
 import { generateBillPDF } from '@/lib/pdfGenerator';
@@ -55,6 +55,9 @@ export default function AdminDashboard() {
   const [contactMessage, setContactMessage] = useState('');
   const [contactMethod, setContactMethod] = useState<'whatsapp' | 'phone' | 'email' | 'in_person' | 'other'>('whatsapp');
   const [clientNotes, setClientNotes] = useState<any[]>([]);
+  const [pendingAdminRequests, setPendingAdminRequests] = useState<any[]>([]);
+  const [showAdminApprovalsModal, setShowAdminApprovalsModal] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
   const { showToast, ToastContainer } = useToast();
 
   useEffect(() => {
@@ -109,6 +112,17 @@ export default function AdminDashboard() {
 
       if (requestsData) {
         setPendingRequests(requestsData);
+      }
+
+      // Cargar solicitudes de aprobación de administradores pendientes
+      const { data: adminRequestsData } = await supabase
+        .from('admin_approval_requests')
+        .select('*')
+        .eq('status', 'pendiente')
+        .order('requested_at', { ascending: false });
+
+      if (adminRequestsData) {
+        setPendingAdminRequests(adminRequestsData);
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -219,6 +233,56 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error('Error rejecting request:', error);
       showToast('Error al rechazar la solicitud', 'error');
+    }
+  }
+
+  async function handleApproveAdmin(userId: string) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user.id) {
+        throw new Error('No hay sesión activa');
+      }
+
+      // Llamar a la función de Supabase para aprobar admin
+      const { error } = await supabase.rpc('approve_admin', {
+        p_user_id: userId,
+        p_approved_by: session.user.id
+      });
+
+      if (error) throw error;
+
+      showToast('Administrador aprobado exitosamente', 'success');
+      loadData();
+    } catch (error: any) {
+      console.error('Error aprobando administrador:', error);
+      showToast(error.message || 'Error al aprobar administrador', 'error');
+    }
+  }
+
+  async function handleRejectAdmin(userId: string, reason?: string) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user.id) {
+        throw new Error('No hay sesión activa');
+      }
+
+      // Llamar a la función de Supabase para rechazar admin
+      const { error } = await supabase.rpc('reject_admin', {
+        p_user_id: userId,
+        p_rejected_by: session.user.id,
+        p_reason: reason || null
+      });
+
+      if (error) throw error;
+
+      showToast('Solicitud de administrador rechazada', 'success');
+      setRejectionReason('');
+      loadData();
+    } catch (error: any) {
+      console.error('Error rechazando administrador:', error);
+      showToast(error.message || 'Error al rechazar solicitud', 'error');
     }
   }
 
@@ -440,6 +504,18 @@ export default function AdminDashboard() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
           <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900">Panel de Administrador</h1>
           <div className="flex gap-2">
+            {pendingAdminRequests.length > 0 && (
+              <Button
+                variant="primary"
+                onClick={() => setShowAdminApprovalsModal(true)}
+                className="flex items-center justify-center gap-2 text-sm sm:text-base relative"
+              >
+                <Shield className="w-4 h-4" />
+                <span className="hidden sm:inline">Aprobar Admins</span>
+                <span className="sm:hidden">Admins</span>
+                <Badge variant="danger" className="ml-1">{pendingAdminRequests.length}</Badge>
+              </Button>
+            )}
             <Button
               variant="secondary"
               onClick={handleShowGlobalHistory}
@@ -473,6 +549,36 @@ export default function AdminDashboard() {
           />
         </div>
       </div>
+
+      {/* Alerta de Solicitudes de Administradores Pendientes */}
+      {pendingAdminRequests.length > 0 && (
+        <Card className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 border-amber-300">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center">
+                <Shield className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-amber-900">
+                  {pendingAdminRequests.length} {pendingAdminRequests.length === 1 ? 'Solicitud' : 'Solicitudes'} de Administrador Pendiente{pendingAdminRequests.length !== 1 ? 's' : ''}
+                </h3>
+                <p className="text-sm text-amber-700">
+                  {pendingAdminRequests.length === 1 
+                    ? 'Hay una nueva solicitud de administrador esperando tu aprobación' 
+                    : `Hay ${pendingAdminRequests.length} nuevas solicitudes de administrador esperando tu aprobación`}
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="primary"
+              onClick={() => setShowAdminApprovalsModal(true)}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              Revisar
+            </Button>
+          </div>
+        </Card>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -1654,6 +1760,85 @@ export default function AdminDashboard() {
 
           <div className="flex gap-3">
             <Button variant="ghost" onClick={() => setShowGlobalHistoryModal(false)} className="flex-1">
+              Cerrar
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal de Aprobación de Administradores */}
+      <Modal
+        isOpen={showAdminApprovalsModal}
+        onClose={() => setShowAdminApprovalsModal(false)}
+        title="Solicitudes de Aprobación de Administradores"
+      >
+        <div className="space-y-4">
+          {pendingAdminRequests.length === 0 ? (
+            <div className="text-center py-8 text-neutral-600">
+              No hay solicitudes pendientes
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {pendingAdminRequests.map((request: any) => (
+                <Card key={request.id} className="p-4">
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Shield className="w-5 h-5 text-amber-600" />
+                          <h3 className="font-semibold text-neutral-900">{request.full_name}</h3>
+                          <Badge variant="warning">Pendiente</Badge>
+                        </div>
+                        <p className="text-sm text-neutral-600 mb-1">
+                          <strong>Email:</strong> {request.email}
+                        </p>
+                        <p className="text-xs text-neutral-500">
+                          <strong>Solicitado:</strong> {new Date(request.requested_at).toLocaleDateString('es-AR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 pt-3 border-t border-neutral-200">
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => handleApproveAdmin(request.user_id)}
+                        className="flex-1 flex items-center justify-center gap-2"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        Aprobar
+                      </Button>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => {
+                          const reason = prompt('Motivo del rechazo (opcional):');
+                          handleRejectAdmin(request.user_id, reason || undefined);
+                        }}
+                        className="flex-1 flex items-center justify-center gap-2"
+                      >
+                        <XCircle className="w-4 h-4" />
+                        Rechazar
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          <div className="flex gap-3 pt-4 border-t border-neutral-200">
+            <Button 
+              variant="ghost" 
+              onClick={() => setShowAdminApprovalsModal(false)} 
+              className="flex-1"
+            >
               Cerrar
             </Button>
           </div>

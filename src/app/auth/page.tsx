@@ -82,7 +82,7 @@ export default function AuthPage() {
       if (data.user) {
         const { data: userData, error: userError } = await supabase
           .from('users')
-          .select('role, full_name')
+          .select('role, full_name, approved')
           .eq('id', data.user.id)
           .single();
 
@@ -96,6 +96,12 @@ export default function AuthPage() {
         }
 
         console.log('Usuario autenticado:', userData.full_name, 'Rol:', userData.role);
+
+        // Verificar si el administrador está aprobado
+        if (userData.role === 'admin' && !userData.approved) {
+          await supabase.auth.signOut();
+          throw new Error('Tu cuenta de administrador aún no ha sido aprobada. Por favor, espera a que un administrador existente apruebe tu solicitud.');
+        }
 
         if (userData.role === 'admin') {
           router.push('/admin');
@@ -184,6 +190,7 @@ export default function AuthPage() {
         console.log('Registrando usuario con rol:', userType);
         
         // Crear registro en tabla users
+        // Si es admin, marcar como no aprobado (requiere autorización)
         const { error: userError } = await supabase
           .from('users')
           .insert({
@@ -191,6 +198,8 @@ export default function AuthPage() {
             email,
             full_name: fullName,
             role: userType,
+            approved: userType === 'cliente' ? true : false,
+            approved_at: userType === 'cliente' ? new Date().toISOString() : null,
           });
 
         if (userError) {
@@ -203,6 +212,22 @@ export default function AuthPage() {
         }
 
         console.log('Usuario creado exitosamente con rol:', userType);
+
+        // Si es admin, crear solicitud de aprobación
+        if (userType === 'admin') {
+          const { error: requestError } = await supabase
+            .from('admin_approval_requests')
+            .insert({
+              user_id: data.user.id,
+              email,
+              full_name: fullName,
+              status: 'pendiente',
+            });
+
+          if (requestError) {
+            console.error('Error al crear solicitud de aprobación:', requestError);
+          }
+        }
 
         // Si es cliente, crear cuenta corriente o vincular con código
         if (userType === 'cliente') {
@@ -255,8 +280,8 @@ export default function AuthPage() {
             setSuccess(`¡Registro exitoso! \n\n📧 IMPORTANTE: Hemos enviado un email de confirmación a ${email}. \n\nPor favor, revisa tu bandeja de entrada (y carpeta de spam) y haz click en el enlace de confirmación antes de iniciar sesión. \n\nSi no recibes el email en 5 minutos, revisa tu carpeta de spam.`);
           }
         } else {
-          // Para admin, solo mostrar mensaje de éxito
-          setSuccess(`¡Registro exitoso! \n\n📧 IMPORTANTE: Hemos enviado un email de confirmación a ${email}. \n\nPor favor, revisa tu bandeja de entrada (y carpeta de spam) y haz click en el enlace de confirmación antes de iniciar sesión. \n\nSi no recibes el email en 5 minutos, revisa tu carpeta de spam.`);
+          // Para admin, mostrar mensaje de aprobación pendiente
+          setSuccess(`¡Registro exitoso! \n\n📧 IMPORTANTE: Hemos enviado un email de confirmación a ${email}. Por favor, confirma tu cuenta. \n\n⏳ APROBACIÓN REQUERIDA: Tu cuenta de administrador debe ser aprobada por un administrador existente antes de poder acceder al sistema. Recibirás una notificación cuando tu cuenta sea aprobada.`);
         }
         
         // Limpiar formulario
