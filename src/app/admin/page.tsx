@@ -244,19 +244,27 @@ export default function AdminDashboard() {
         throw new Error('No hay sesión activa');
       }
 
+      console.log('Intentando aprobar admin:', { userId, approvedBy: session.user.id });
+
       // Llamar a la función de Supabase para aprobar admin
-      const { error } = await supabase.rpc('approve_admin', {
+      const { data, error } = await supabase.rpc('approve_admin', {
         p_user_id: userId,
         p_approved_by: session.user.id
       });
 
-      if (error) throw error;
+      console.log('Respuesta de approve_admin:', { data, error });
+
+      if (error) {
+        console.error('Error detallado:', JSON.stringify(error, null, 2));
+        throw error;
+      }
 
       showToast('Administrador aprobado exitosamente', 'success');
       loadData();
     } catch (error: any) {
       console.error('Error aprobando administrador:', error);
-      showToast(error.message || 'Error al aprobar administrador', 'error');
+      console.error('Error completo:', JSON.stringify(error, null, 2));
+      showToast(error.message || error.hint || 'Error al aprobar administrador', 'error');
     }
   }
 
